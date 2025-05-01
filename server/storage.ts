@@ -151,7 +151,12 @@ export class MemStorage implements IStorage {
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const id = this.currentUserId++;
-    const user: User = { ...insertUser, id };
+    const user: User = { 
+      ...insertUser, 
+      id, 
+      role: insertUser.role || "user",
+      createdAt: new Date()
+    };
     this.users.set(id, user);
     return user;
   }
@@ -173,7 +178,11 @@ export class MemStorage implements IStorage {
 
   async createService(service: InsertService): Promise<Service> {
     const id = Math.max(0, ...Array.from(this.servicesMap.keys())) + 1;
-    const newService: Service = { ...service, id };
+    const newService: Service = { 
+      ...service, 
+      id,
+      imageUrl: service.imageUrl || null 
+    };
     this.servicesMap.set(id, newService);
     return newService;
   }
@@ -209,7 +218,11 @@ export class MemStorage implements IStorage {
 
   async createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem> {
     const id = Math.max(0, ...Array.from(this.portfolioItemsMap.keys())) + 1;
-    const newItem: PortfolioItem = { ...item, id };
+    const newItem: PortfolioItem = { 
+      ...item, 
+      id,
+      imageUrl: item.imageUrl || null
+    };
     this.portfolioItemsMap.set(id, newItem);
     return newItem;
   }
@@ -245,7 +258,11 @@ export class MemStorage implements IStorage {
 
   async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
     const id = Math.max(0, ...Array.from(this.blogPostsMap.keys())) + 1;
-    const newPost: BlogPost = { ...post, id };
+    const newPost: BlogPost = { 
+      ...post, 
+      id,
+      imageUrl: post.imageUrl || null
+    };
     this.blogPostsMap.set(id, newPost);
     return newPost;
   }
@@ -303,7 +320,11 @@ export class MemStorage implements IStorage {
 
   async createJobOpening(job: InsertJobOpening): Promise<JobOpening> {
     const id = Math.max(0, ...Array.from(this.jobOpeningsMap.keys())) + 1;
-    const newJob: JobOpening = { ...job, id };
+    const newJob: JobOpening = { 
+      ...job, 
+      id,
+      isActive: job.isActive !== undefined ? job.isActive : true
+    };
     this.jobOpeningsMap.set(id, newJob);
     return newJob;
   }
@@ -323,4 +344,10 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+import { DatabaseStorage } from "./database-storage";
+
+// Use DatabaseStorage for production environment
+// and MemStorage for development environment when needed
+export const storage = process.env.NODE_ENV === "production" 
+  ? new DatabaseStorage() 
+  : new MemStorage();
