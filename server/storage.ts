@@ -24,24 +24,38 @@ export interface IStorage {
   getService(id: number): Promise<Service | undefined>;
   getServiceBySlug(slug: string): Promise<Service | undefined>;
   getAllServices(): Promise<Service[]>;
+  createService(service: InsertService): Promise<Service>;
+  updateService(id: number, service: Partial<InsertService>): Promise<Service>;
+  deleteService(id: number): Promise<boolean>;
   
   // Portfolio methods
   getPortfolioItem(id: number): Promise<PortfolioItem | undefined>;
   getPortfolioItemBySlug(slug: string): Promise<PortfolioItem | undefined>;
   getAllPortfolioItems(): Promise<PortfolioItem[]>;
+  createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem>;
+  updatePortfolioItem(id: number, item: Partial<InsertPortfolioItem>): Promise<PortfolioItem>;
+  deletePortfolioItem(id: number): Promise<boolean>;
   
   // Blog methods
   getBlogPost(id: number): Promise<BlogPost | undefined>;
   getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
   getAllBlogPosts(): Promise<BlogPost[]>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost>;
+  deleteBlogPost(id: number): Promise<boolean>;
   
   // Contact methods
   createContactSubmission(submission: InsertContactSubmission): Promise<ContactSubmission>;
+  getAllContactSubmissions(): Promise<ContactSubmission[]>;
+  deleteContactSubmission(id: number): Promise<boolean>;
   
   // Job methods
   getJobOpening(id: number): Promise<JobOpening | undefined>;
   getJobOpeningBySlug(slug: string): Promise<JobOpening | undefined>;
   getAllJobOpenings(): Promise<JobOpening[]>;
+  createJobOpening(job: InsertJobOpening): Promise<JobOpening>;
+  updateJobOpening(id: number, job: Partial<InsertJobOpening>): Promise<JobOpening>;
+  deleteJobOpening(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
@@ -156,6 +170,27 @@ export class MemStorage implements IStorage {
   async getAllServices(): Promise<Service[]> {
     return Array.from(this.servicesMap.values());
   }
+
+  async createService(service: InsertService): Promise<Service> {
+    const id = Math.max(0, ...Array.from(this.servicesMap.keys())) + 1;
+    const newService: Service = { ...service, id };
+    this.servicesMap.set(id, newService);
+    return newService;
+  }
+
+  async updateService(id: number, service: Partial<InsertService>): Promise<Service> {
+    const existingService = this.servicesMap.get(id);
+    if (!existingService) {
+      throw new Error(`Service with id ${id} not found`);
+    }
+    const updatedService: Service = { ...existingService, ...service };
+    this.servicesMap.set(id, updatedService);
+    return updatedService;
+  }
+
+  async deleteService(id: number): Promise<boolean> {
+    return this.servicesMap.delete(id);
+  }
   
   // Portfolio methods
   async getPortfolioItem(id: number): Promise<PortfolioItem | undefined> {
@@ -170,6 +205,27 @@ export class MemStorage implements IStorage {
   
   async getAllPortfolioItems(): Promise<PortfolioItem[]> {
     return Array.from(this.portfolioItemsMap.values());
+  }
+
+  async createPortfolioItem(item: InsertPortfolioItem): Promise<PortfolioItem> {
+    const id = Math.max(0, ...Array.from(this.portfolioItemsMap.keys())) + 1;
+    const newItem: PortfolioItem = { ...item, id };
+    this.portfolioItemsMap.set(id, newItem);
+    return newItem;
+  }
+
+  async updatePortfolioItem(id: number, item: Partial<InsertPortfolioItem>): Promise<PortfolioItem> {
+    const existingItem = this.portfolioItemsMap.get(id);
+    if (!existingItem) {
+      throw new Error(`Portfolio item with id ${id} not found`);
+    }
+    const updatedItem: PortfolioItem = { ...existingItem, ...item };
+    this.portfolioItemsMap.set(id, updatedItem);
+    return updatedItem;
+  }
+
+  async deletePortfolioItem(id: number): Promise<boolean> {
+    return this.portfolioItemsMap.delete(id);
   }
   
   // Blog methods
@@ -186,6 +242,27 @@ export class MemStorage implements IStorage {
   async getAllBlogPosts(): Promise<BlogPost[]> {
     return Array.from(this.blogPostsMap.values());
   }
+
+  async createBlogPost(post: InsertBlogPost): Promise<BlogPost> {
+    const id = Math.max(0, ...Array.from(this.blogPostsMap.keys())) + 1;
+    const newPost: BlogPost = { ...post, id };
+    this.blogPostsMap.set(id, newPost);
+    return newPost;
+  }
+
+  async updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost> {
+    const existingPost = this.blogPostsMap.get(id);
+    if (!existingPost) {
+      throw new Error(`Blog post with id ${id} not found`);
+    }
+    const updatedPost: BlogPost = { ...existingPost, ...post };
+    this.blogPostsMap.set(id, updatedPost);
+    return updatedPost;
+  }
+
+  async deleteBlogPost(id: number): Promise<boolean> {
+    return this.blogPostsMap.delete(id);
+  }
   
   // Contact methods
   async createContactSubmission(submission: InsertContactSubmission): Promise<ContactSubmission> {
@@ -193,10 +270,20 @@ export class MemStorage implements IStorage {
     const contactSubmission: ContactSubmission = { 
       ...submission, 
       id,
-      submittedAt: new Date() 
+      submittedAt: new Date(),
+      company: submission.company || null,
+      service: submission.service || null
     };
     this.contactSubmissionsMap.set(id, contactSubmission);
     return contactSubmission;
+  }
+
+  async getAllContactSubmissions(): Promise<ContactSubmission[]> {
+    return Array.from(this.contactSubmissionsMap.values());
+  }
+
+  async deleteContactSubmission(id: number): Promise<boolean> {
+    return this.contactSubmissionsMap.delete(id);
   }
   
   // Job methods
@@ -212,6 +299,27 @@ export class MemStorage implements IStorage {
   
   async getAllJobOpenings(): Promise<JobOpening[]> {
     return Array.from(this.jobOpeningsMap.values());
+  }
+
+  async createJobOpening(job: InsertJobOpening): Promise<JobOpening> {
+    const id = Math.max(0, ...Array.from(this.jobOpeningsMap.keys())) + 1;
+    const newJob: JobOpening = { ...job, id };
+    this.jobOpeningsMap.set(id, newJob);
+    return newJob;
+  }
+
+  async updateJobOpening(id: number, job: Partial<InsertJobOpening>): Promise<JobOpening> {
+    const existingJob = this.jobOpeningsMap.get(id);
+    if (!existingJob) {
+      throw new Error(`Job opening with id ${id} not found`);
+    }
+    const updatedJob: JobOpening = { ...existingJob, ...job };
+    this.jobOpeningsMap.set(id, updatedJob);
+    return updatedJob;
+  }
+
+  async deleteJobOpening(id: number): Promise<boolean> {
+    return this.jobOpeningsMap.delete(id);
   }
 }
 
