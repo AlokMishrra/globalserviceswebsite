@@ -18,7 +18,6 @@ async function createAdminUser() {
       username: "admin",
       password: hashedPassword,
       email: "admin@globalservices.com",
-      name: "Admin User",
       role: "admin"
     });
 
@@ -31,14 +30,12 @@ async function createAdminUser() {
   }
 }
 
-// Run the function when this script is executed directly
-if (require.main === module) {
-  createAdminUser()
-    .then(() => process.exit(0))
-    .catch((error) => {
-      console.error("Error:", error);
-      process.exit(1);
-    });
-}
+// Run the function
+createAdminUser()
+  .then(() => process.exit(0))
+  .catch((error) => {
+    console.error("Error:", error);
+    process.exit(1);
+  });
 
 export { createAdminUser };

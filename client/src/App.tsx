@@ -20,6 +20,7 @@ import NotFound from "@/pages/not-found";
 // Admin pages
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
+import AdminServicesPage from "@/pages/AdminServicesPage";
 
 function Router() {
   const [location] = useLocation();
@@ -30,6 +31,7 @@ function Router() {
       <Switch>
         <Route path="/admin/login" component={AdminLoginPage} />
         <Route path="/admin" component={AdminDashboardPage} />
+        <Route path="/admin/services" component={AdminServicesPage} />
         {/* We'll add more admin routes as needed */}
         <Route component={NotFound} />
       </Switch>
