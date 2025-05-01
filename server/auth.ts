@@ -3,6 +3,21 @@ import { storage } from "./storage";
 import { z } from "zod";
 import { hash, compare } from "bcrypt";
 import { insertUserSchema } from "@shared/schema";
+import session from "express-session";
+
+// Define session interfaces
+interface SessionData {
+  userId?: number;
+  userRole?: string;
+}
+
+// Add custom properties to express-session
+declare module 'express-session' {
+  interface Session {
+    userId?: number;
+    userRole?: string;
+  }
+}
 
 const router = express.Router();
 
@@ -101,7 +116,7 @@ router.get("/me", async (req: Request, res: Response) => {
 // Logout endpoint
 router.post("/logout", (req: Request, res: Response) => {
   if (req.session) {
-    req.session.destroy((err) => {
+    req.session.destroy((err: any) => {
       if (err) {
         return res.status(500).json({ error: "Failed to logout" });
       }
