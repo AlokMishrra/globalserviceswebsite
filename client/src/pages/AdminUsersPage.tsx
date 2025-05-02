@@ -1,12 +1,5 @@
 import { useState } from "react";
-import { useQuery, useMutation } from "@tanstack/react-query";
-import { queryClient } from "@/lib/queryClient";
-import { InsertUser, User } from "@shared/schema";
-import { z } from "zod";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { apiRequest } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
+import { useUsers, UserWithoutPassword, UserFormValues } from "@/hooks/use-users";
 
 import AdminLayout from "@/components/layout/AdminLayout";
 import {
@@ -62,182 +55,58 @@ const AVAILABLE_PERMISSIONS = [
   { id: "manage_users", label: "Manage Users" },
 ];
 
-// Extend the user schema for the form
-const userFormSchema = z.object({
-  username: z.string().min(3, "Username must be at least 3 characters"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  email: z.string().email("Must be a valid email address"),
-  role: z.string(),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-  permissions: z.array(z.string()).optional(),
-});
-
-type UserFormValues = z.infer<typeof userFormSchema>;
-
 export default function AdminUsersPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserWithoutPassword | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
-  const { toast } = useToast();
 
-  // Fetch users
-  const { data: users = [], isLoading } = useQuery<User[]>({
-    queryKey: ["/api/admin/users"],
-    queryFn: async () => {
-      const res = await apiRequest("/api/admin/users");
-      return res.json();
-    },
-  });
+  // Get users and mutations from our hook
+  const {
+    users,
+    isLoading,
+    error,
+    createUserMutation,
+    updateUserMutation,
+    deleteUserMutation,
+    useUserForm,
+    userToFormValues
+  } = useUsers();
 
   // Setup form
-  const form = useForm<UserFormValues>({
-    resolver: zodResolver(userFormSchema),
-    defaultValues: {
-      username: "",
-      password: "",
-      email: "",
-      role: "user",
-      firstName: "",
-      lastName: "",
-      permissions: [],
-    },
-  });
-
-  // Create user mutation
-  const createUserMutation = useMutation({
-    mutationFn: async (data: UserFormValues) => {
-      const res = await apiRequest("/api/admin/users", {
-        method: "POST",
-        body: JSON.stringify(data),
-      });
-      
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to create user");
-      }
-      
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setIsDialogOpen(false);
-      form.reset();
-      toast({
-        title: "Success",
-        description: "User created successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Update user mutation
-  const updateUserMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: number; data: Partial<UserFormValues> }) => {
-      const res = await apiRequest(`/api/admin/users/${id}`, {
-        method: "PATCH",
-        body: JSON.stringify(data),
-      });
-      
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to update user");
-      }
-      
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setIsDialogOpen(false);
-      setSelectedUser(null);
-      form.reset();
-      toast({
-        title: "Success",
-        description: "User updated successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Delete user mutation
-  const deleteUserMutation = useMutation({
-    mutationFn: async (id: number) => {
-      const res = await apiRequest(`/api/admin/users/${id}`, {
-        method: "DELETE",
-      });
-      
-      if (!res.ok) {
-        const error = await res.json();
-        throw new Error(error.error || "Failed to delete user");
-      }
-      
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/admin/users"] });
-      setIsDeleteDialogOpen(false);
-      setSelectedUser(null);
-      toast({
-        title: "Success",
-        description: "User deleted successfully",
-      });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description: error.message,
-        variant: "destructive",
-      });
-    },
-  });
+  const form = useUserForm();
 
   // Handle form submission
   const onSubmit = async (data: UserFormValues) => {
     if (isEditMode && selectedUser) {
       // If editing, exclude password if it's empty (unchanged)
-      const updateData = { ...data };
-      const finalData = updateData.password && updateData.password.trim() !== "" 
-        ? updateData 
-        : { 
-            username: updateData.username,
-            email: updateData.email,
-            role: updateData.role,
-            firstName: updateData.firstName,
-            lastName: updateData.lastName,
-            permissions: updateData.permissions
-          };
-          
-      updateUserMutation.mutate({ id: selectedUser.id, data: finalData });
+      if (!data.password || data.password.trim() === "") {
+        const { password, confirmPassword, ...restData } = data;
+        updateUserMutation.mutate({ 
+          id: selectedUser.id, 
+          data: restData 
+        });
+      } else {
+        updateUserMutation.mutate({ 
+          id: selectedUser.id, 
+          data
+        });
+      }
+      setIsDialogOpen(false);
     } else {
       createUserMutation.mutate(data);
+      setIsDialogOpen(false);
     }
   };
 
   // Open dialog for editing
-  const openEditDialog = (user: User) => {
+  const openEditDialog = (user: UserWithoutPassword) => {
     setSelectedUser(user);
     setIsEditMode(true);
     form.reset({
-      username: user.username,
-      email: user.email,
-      password: "", // Don't show the password
-      role: user.role,
-      firstName: user.firstName || "",
-      lastName: user.lastName || "",
-      permissions: user.permissions || [],
+      ...userToFormValues(user),
+      password: "",    // Don't show the password
+      confirmPassword: "", // Don't show the password
     });
     setIsDialogOpen(true);
   };
@@ -246,20 +115,12 @@ export default function AdminUsersPage() {
   const openCreateDialog = () => {
     setSelectedUser(null);
     setIsEditMode(false);
-    form.reset({
-      username: "",
-      password: "",
-      email: "",
-      role: "user",
-      firstName: "",
-      lastName: "",
-      permissions: [],
-    });
+    form.reset();
     setIsDialogOpen(true);
   };
 
   // Open delete confirmation dialog
-  const openDeleteDialog = (user: User) => {
+  const openDeleteDialog = (user: UserWithoutPassword) => {
     setSelectedUser(user);
     setIsDeleteDialogOpen(true);
   };
@@ -268,6 +129,7 @@ export default function AdminUsersPage() {
   const confirmDelete = () => {
     if (selectedUser) {
       deleteUserMutation.mutate(selectedUser.id);
+      setIsDeleteDialogOpen(false);
     }
   };
 
@@ -416,6 +278,19 @@ export default function AdminUsersPage() {
                   </FormItem>
                 )}
               />
+              <FormField
+                control={form.control}
+                name="confirmPassword"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>{isEditMode ? "Confirm New Password" : "Confirm Password"}</FormLabel>
+                    <FormControl>
+                      <Input type="password" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
@@ -424,7 +299,7 @@ export default function AdminUsersPage() {
                     <FormItem>
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -437,7 +312,7 @@ export default function AdminUsersPage() {
                     <FormItem>
                       <FormLabel>Last Name</FormLabel>
                       <FormControl>
-                        <Input {...field} />
+                        <Input {...field} value={field.value || ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -490,18 +365,20 @@ export default function AdminUsersPage() {
                                   <Checkbox
                                     checked={field.value?.includes(permission.id)}
                                     onCheckedChange={(checked) => {
-                                      const currentPermissions = field.value || [];
-                                      return checked
-                                        ? field.onChange([...currentPermissions, permission.id])
-                                        : field.onChange(
-                                            currentPermissions.filter(
-                                              (value) => value !== permission.id
-                                            )
-                                          );
+                                      const permissions = field.value || [];
+                                      if (checked) {
+                                        field.onChange([...permissions, permission.id]);
+                                      } else {
+                                        field.onChange(
+                                          permissions.filter(
+                                            (value) => value !== permission.id
+                                          )
+                                        );
+                                      }
                                     }}
                                   />
                                 </FormControl>
-                                <FormLabel className="text-sm font-normal">
+                                <FormLabel className="font-normal">
                                   {permission.label}
                                 </FormLabel>
                               </FormItem>
@@ -510,7 +387,6 @@ export default function AdminUsersPage() {
                         />
                       ))}
                     </div>
-                    <FormMessage />
                   </FormItem>
                 )}
               />
@@ -522,7 +398,10 @@ export default function AdminUsersPage() {
                 >
                   Cancel
                 </Button>
-                <Button type="submit" disabled={createUserMutation.isPending || updateUserMutation.isPending}>
+                <Button 
+                  type="submit"
+                  disabled={createUserMutation.isPending || updateUserMutation.isPending}
+                >
                   {(createUserMutation.isPending || updateUserMutation.isPending) ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -544,7 +423,7 @@ export default function AdminUsersPage() {
           <DialogHeader>
             <DialogTitle>Delete User</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete {selectedUser?.username}? This action cannot be undone.
+              Are you sure you want to delete the user '{selectedUser?.username}'? This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -555,9 +434,9 @@ export default function AdminUsersPage() {
             >
               Cancel
             </Button>
-            <Button 
-              variant="destructive" 
-              onClick={confirmDelete} 
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
               disabled={deleteUserMutation.isPending}
             >
               {deleteUserMutation.isPending ? (

@@ -330,6 +330,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // User management - Admin only
+  // Get all users
+  app.get('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      // Don't send passwords to the client
+      const usersWithoutPasswords = users.map(user => {
+        const { password, ...userWithoutPassword } = user;
+        return userWithoutPassword;
+      });
+      
+      res.json(usersWithoutPasswords);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch users' });
+    }
+  });
+
+  // Create user
+  app.post('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+      // Add validation
+      const userData = insertUserSchema.parse(req.body);
+      
+      // Check if username already exists
+      const existingUser = await storage.getUserByUsername(userData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: 'Username already exists' });
+      }
+      
+      // Hash the password with bcrypt before storing
+      const { hash } = await import('bcrypt');
+      const hashedPassword = await hash(userData.password, 10);
+      
+      // Create user with hashed password
+      const user = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+      });
+      
+      // Don't send the password in the response
+      const { password, ...userWithoutPassword } = user;
+      res.status(201).json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to create user' });
+    }
+  });
+  
+  // Update user
+  app.patch('/api/admin/users/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Check if user exists
+      const existingUser = await storage.getUser(id);
+      if (!existingUser) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      // Allow partial updates and validate
+      const userData = insertUserSchema.partial().parse(req.body);
+      
+      // If updating username, check if it's already taken
+      if (userData.username && userData.username !== existingUser.username) {
+        const userWithSameUsername = await storage.getUserByUsername(userData.username);
+        if (userWithSameUsername) {
+          return res.status(400).json({ message: 'Username already exists' });
+        }
+      }
+      
+      // Hash password if it's being updated
+      if (userData.password) {
+        const { hash } = await import('bcrypt');
+        userData.password = await hash(userData.password, 10);
+      }
+      
+      // Update user
+      const updatedUser = await storage.updateUser(id, userData);
+      
+      // Don't send the password in the response
+      const { password, ...userWithoutPassword } = updatedUser;
+      res.json(userWithoutPassword);
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: 'Validation error', errors: error.errors });
+      }
+      res.status(500).json({ message: 'Failed to update user' });
+    }
+  });
+  
+  // Delete user
+  app.delete('/api/admin/users/:id', isAdmin, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      
+      // Prevent deleting your own account
+      if (req.session?.userId === id) {
+        return res.status(400).json({ message: 'Cannot delete your own account' });
+      }
+      
+      const success = await storage.deleteUser(id);
+      if (!success) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      
+      res.json({ message: 'User deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to delete user' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
