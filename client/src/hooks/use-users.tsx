@@ -30,7 +30,7 @@ export function useUsers() {
   } = useQuery<UserWithoutPassword[]>({
     queryKey: ['/api/admin/users'],
     queryFn: async () => {
-      const res = await apiRequest('GET', '/api/admin/users');
+      const res = await apiRequest('/api/admin/users');
       return await res.json();
     },
   });
@@ -40,7 +40,10 @@ export function useUsers() {
     mutationFn: async (data: UserFormValues) => {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = data;
-      const res = await apiRequest('POST', '/api/admin/users', userData);
+      const res = await apiRequest('/api/admin/users', {
+        method: 'POST',
+        body: JSON.stringify(userData)
+      });
       return await res.json();
     },
     onSuccess: () => {
@@ -64,7 +67,10 @@ export function useUsers() {
     mutationFn: async ({ id, data }: { id: number; data: Partial<UserFormValues> }) => {
       // Remove confirmPassword before sending to API
       const { confirmPassword, ...userData } = data;
-      const res = await apiRequest('PATCH', `/api/admin/users/${id}`, userData);
+      const res = await apiRequest(`/api/admin/users/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify(userData)
+      });
       return await res.json();
     },
     onSuccess: () => {
@@ -86,7 +92,9 @@ export function useUsers() {
   // Delete a user
   const deleteUserMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/users/${id}`);
+      await apiRequest(`/api/admin/users/${id}`, {
+        method: 'DELETE'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
