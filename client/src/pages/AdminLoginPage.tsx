@@ -52,15 +52,31 @@ export default function AdminLoginPage() {
       // Log the request for debugging
       console.log("Attempting login with:", { username: data.username });
       
-      const response = await apiRequest("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(data),
-        credentials: 'include', // This ensures cookies are sent with the request
-      });
+      const response = await apiRequest("POST", "/api/auth/login", data);
       
       if (response.ok) {
         const userData = await response.json();
         console.log("Login successful:", userData);
+        
+        // Verify the session was created correctly
+        try {
+          const statusResponse = await apiRequest("/api/auth/status");
+          const statusData = await statusResponse.json();
+          console.log("Auth status after login:", statusData);
+          
+          if (!statusData.isAuthenticated || statusData.session?.userRole !== 'admin') {
+            console.error("Login appears successful but session not properly set");
+            toast({
+              title: "Warning",
+              description: "Logged in but session may not be properly set",
+              variant: "destructive",
+            });
+          } else {
+            console.log("Session properly set, user is authenticated as admin");
+          }
+        } catch (statusError) {
+          console.error("Failed to check auth status after login:", statusError);
+        }
         
         toast({
           title: "Success",

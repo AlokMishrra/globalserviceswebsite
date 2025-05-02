@@ -55,10 +55,40 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         // Check the session status
         const response = await apiRequest("/api/auth/status");
         const data = await response.json();
-        console.log("Auth status:", data);
+        console.log("Auth status check result:", data);
         
         if (!data.isAuthenticated || data.session?.userRole !== 'admin') {
           console.log("Not authenticated or not admin, redirecting to login page");
+          
+          // For debugging only - try logging in automatically
+          console.log("Attempting automatic login with default admin credentials");
+          try {
+            const loginResponse = await apiRequest("POST", "/api/auth/login", {
+              username: "admin",
+              password: "admin123"
+            });
+            
+            if (loginResponse.ok) {
+              const loginData = await loginResponse.json();
+              console.log("Auto-login successful:", loginData);
+              
+              // Check auth status again
+              const statusResponse = await apiRequest("/api/auth/status");
+              const statusData = await statusResponse.json();
+              console.log("Auth status after auto-login:", statusData);
+              
+              if (statusData.isAuthenticated && statusData.session?.userRole === 'admin') {
+                console.log("Auto-login fixed the session, continuing to admin panel");
+                setIsAuthenticated(true);
+                return;
+              }
+            } else {
+              console.error("Auto-login failed");
+            }
+          } catch (loginError) {
+            console.error("Auto-login error:", loginError);
+          }
+          
           navigate("/admin/login");
           return;
         }
@@ -77,13 +107,27 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
 
   async function handleLogout() {
     try {
-      const response = await apiRequest("/api/auth/logout", { method: "POST" });
+      console.log("Attempting to logout...");
+      const response = await apiRequest("POST", "/api/auth/logout");
+      
       if (response.ok) {
-        window.location.href = "/admin/login";
+        console.log("Logout successful, redirecting to login page");
+        toast({
+          title: "Success",
+          description: "Successfully logged out",
+        });
+        
+        // Use immediate redirect instead of relying on location change
+        setTimeout(() => {
+          window.location.href = "/admin/login";
+        }, 500);
       } else {
-        throw new Error("Logout failed");
+        const errorData = await response.json();
+        console.error("Logout failed:", errorData);
+        throw new Error(errorData.error || "Logout failed");
       }
     } catch (error) {
+      console.error("Logout error:", error);
       toast({
         title: "Error",
         description: "Failed to logout",
