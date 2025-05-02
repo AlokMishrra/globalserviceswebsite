@@ -13,10 +13,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Trash2, Pencil, Plus, X, Eye, CheckCircle, AlertCircle } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
-import { useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import ImageUploader from '@/components/ImageUploader';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface TeamMember {
   id: number;
@@ -36,8 +37,8 @@ const teamMemberSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   position: z.string().min(1, 'Position is required'),
   bio: z.string().min(1, 'Bio is required'),
-  imageUrl: z.string().nullable().optional(),
-  socialLinks: z.string().nullable().optional(),
+  imageUrl: z.string().nullable(),
+  socialLinks: z.string().nullable(),
   order: z.number().min(0, 'Order must be a positive number'),
   isActive: z.boolean().default(true),
 });
@@ -57,8 +58,8 @@ const AdminTeamPage: React.FC = () => {
       name: '',
       position: '',
       bio: '',
-      imageUrl: '',
-      socialLinks: '',
+      imageUrl: null,
+      socialLinks: null,
       order: 0,
       isActive: true,
     },
@@ -72,10 +73,7 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to create a team member
   const createMutation = useMutation({
     mutationFn: async (data: TeamMemberFormValues) => {
-      const response = await apiRequest('/api/admin/team', {
-        method: 'POST',
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest('POST', '/api/admin/team', data);
       return await response.json();
     },
     onSuccess: () => {
@@ -99,10 +97,7 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to update a team member
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: TeamMemberFormValues }) => {
-      const response = await apiRequest(`/api/admin/team/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data)
-      });
+      const response = await apiRequest('PUT', `/api/admin/team/${id}`, data);
       return await response.json();
     },
     onSuccess: () => {
@@ -125,9 +120,7 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to delete a team member
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest(`/api/admin/team/${id}`, {
-        method: 'DELETE'
-      });
+      await apiRequest('DELETE', `/api/admin/team/${id}`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/team'] });
@@ -161,8 +154,8 @@ const AdminTeamPage: React.FC = () => {
       name: member.name,
       position: member.position,
       bio: member.bio,
-      imageUrl: member.imageUrl || '',
-      socialLinks: member.socialLinks || '',
+      imageUrl: member.imageUrl,
+      socialLinks: member.socialLinks,
       order: member.order,
       isActive: member.isActive,
     });
@@ -186,8 +179,8 @@ const AdminTeamPage: React.FC = () => {
       name: '',
       position: '',
       bio: '',
-      imageUrl: '',
-      socialLinks: '',
+      imageUrl: null,
+      socialLinks: null,
       order: teamMembers.length,
       isActive: true,
     });
@@ -268,170 +261,324 @@ const AdminTeamPage: React.FC = () => {
 
         {/* Add Team Member Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add Team Member</DialogTitle>
               <DialogDescription>Add a new team member to your website.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="col-span-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" {...form.register('name')} />
-                  {form.formState.errors.name && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.name.message}</p>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Input id="position" {...form.register('position')} />
-                  {form.formState.errors.position && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.position.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input placeholder="CEO" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea id="bio" {...form.register('bio')} />
-                  {form.formState.errors.bio && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.bio.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bio</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Brief description of the team member" 
+                          className="min-h-[100px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="imageUrl">Image URL</Label>
-                  <Input id="imageUrl" {...form.register('imageUrl')} />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="socialLinks">Social Links (JSON format)</Label>
-                  <Textarea 
-                    id="socialLinks" 
-                    {...form.register('socialLinks')} 
-                    placeholder='{"linkedin": "https://linkedin.com/in/username", "twitter": "https://twitter.com/username"}'
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUploader
+                          currentImageUrl={field.value}
+                          onImageChange={(url) => field.onChange(url)}
+                          label="Team Member Photo"
+                          description="Upload a professional photo of the team member (recommended size: 300x300px)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="socialLinks"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Social Links (JSON format)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder='{"linkedin": "https://linkedin.com/in/username", "twitter": "https://twitter.com/username"}'
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter social links in valid JSON format
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="order"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display Order</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            value={field.value}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Lower numbers display first
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel>Active Status</FormLabel>
+                          <FormDescription>
+                            Will appear on the website
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="col-span-1">
-                  <Label htmlFor="order">Display Order</Label>
-                  <Input 
-                    id="order" 
-                    type="number" 
-                    {...form.register('order', { valueAsNumber: true })} 
-                  />
-                  {form.formState.errors.order && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.order.message}</p>
-                  )}
-                </div>
-                <div className="col-span-1">
-                  <div className="flex items-center h-full mt-8">
-                    <Label htmlFor="isActive" className="mr-2">Is Active</Label>
-                    <Switch 
-                      id="isActive" 
-                      checked={form.watch('isActive')} 
-                      onCheckedChange={(checked) => form.setValue('isActive', checked)} 
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              </DialogFooter>
-            </form>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? 'Creating...' : 'Create Team Member'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 
         {/* Edit Team Member Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Team Member</DialogTitle>
               <DialogDescription>Update team member information.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="col-span-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" {...form.register('name')} />
-                  {form.formState.errors.name && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.name.message}</p>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="John Doe" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="position">Position</Label>
-                  <Input id="position" {...form.register('position')} />
-                  {form.formState.errors.position && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.position.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="position"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Position</FormLabel>
+                      <FormControl>
+                        <Input placeholder="CEO" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="bio">Bio</Label>
-                  <Textarea id="bio" {...form.register('bio')} />
-                  {form.formState.errors.bio && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.bio.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="bio"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bio</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Brief description of the team member" 
+                          className="min-h-[100px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="imageUrl">Image URL</Label>
-                  <Input id="imageUrl" {...form.register('imageUrl')} />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="socialLinks">Social Links (JSON format)</Label>
-                  <Textarea 
-                    id="socialLinks" 
-                    {...form.register('socialLinks')} 
-                    placeholder='{"linkedin": "https://linkedin.com/in/username", "twitter": "https://twitter.com/username"}'
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUploader
+                          currentImageUrl={field.value}
+                          onImageChange={(url) => field.onChange(url)}
+                          label="Team Member Photo"
+                          description="Upload a professional photo of the team member (recommended size: 300x300px)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="socialLinks"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Social Links (JSON format)</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder='{"linkedin": "https://linkedin.com/in/username", "twitter": "https://twitter.com/username"}'
+                          {...field}
+                          value={field.value || ''}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Enter social links in valid JSON format
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <FormField
+                    control={form.control}
+                    name="order"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Display Order</FormLabel>
+                        <FormControl>
+                          <Input 
+                            type="number" 
+                            min="0"
+                            {...field}
+                            onChange={(e) => field.onChange(parseInt(e.target.value))}
+                            value={field.value}
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Lower numbers display first
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="isActive"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                        <div className="space-y-0.5">
+                          <FormLabel>Active Status</FormLabel>
+                          <FormDescription>
+                            Will appear on the website
+                          </FormDescription>
+                        </div>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
                   />
                 </div>
-                <div className="col-span-1">
-                  <Label htmlFor="order">Display Order</Label>
-                  <Input 
-                    id="order" 
-                    type="number" 
-                    {...form.register('order', { valueAsNumber: true })} 
-                  />
-                  {form.formState.errors.order && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.order.message}</p>
-                  )}
-                </div>
-                <div className="col-span-1">
-                  <div className="flex items-center h-full mt-8">
-                    <Label htmlFor="isActive" className="mr-2">Is Active</Label>
-                    <Switch 
-                      id="isActive" 
-                      checked={form.watch('isActive')} 
-                      onCheckedChange={(checked) => form.setValue('isActive', checked)} 
-                    />
-                  </div>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              </DialogFooter>
-            </form>
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? 'Updating...' : 'Update Team Member'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Confirm Deletion</DialogTitle>
               <DialogDescription>
-                Are you sure you want to delete {selectedMember?.name}? This action cannot be undone.
+                Are you sure you want to delete the team member "{selectedMember?.name}"? This action cannot be undone.
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
               </Button>
             </DialogFooter>
