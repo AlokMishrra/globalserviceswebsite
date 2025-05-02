@@ -38,10 +38,42 @@ function AdminNavItem({ href, title, isActive, isMobile, onClick }: AdminNavItem
 }
 
 export default function AdminLayout({ children }: AdminLayoutProps) {
-  const [location] = useLocation();
+  const [location, navigate] = useLocation();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isMobile = useIsMobile();
   const { toast } = useToast();
+
+  // Check authentication on component mount
+  useEffect(() => {
+    async function checkAuth() {
+      try {
+        console.log("Checking authentication...");
+        setIsLoading(true);
+        
+        // Check the session status
+        const response = await apiRequest("/api/auth/status");
+        const data = await response.json();
+        console.log("Auth status:", data);
+        
+        if (!data.isAuthenticated || data.session?.userRole !== 'admin') {
+          console.log("Not authenticated or not admin, redirecting to login page");
+          navigate("/admin/login");
+          return;
+        }
+        
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        navigate("/admin/login");
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    
+    checkAuth();
+  }, [navigate]);
 
   async function handleLogout() {
     try {
@@ -64,6 +96,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   useEffect(() => {
     setMobileNavOpen(false);
   }, [location]);
+  
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto mb-4"></div>
+          <p>Loading admin dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If not authenticated, the effect will redirect, but just in case
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex min-h-screen bg-background">

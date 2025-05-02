@@ -49,12 +49,19 @@ export default function AdminLoginPage() {
   async function onSubmit(data: LoginFormValues) {
     setIsLoading(true);
     try {
+      // Log the request for debugging
+      console.log("Attempting login with:", { username: data.username });
+      
       const response = await apiRequest("/api/auth/login", {
         method: "POST",
         body: JSON.stringify(data),
+        credentials: 'include', // This ensures cookies are sent with the request
       });
       
       if (response.ok) {
+        const userData = await response.json();
+        console.log("Login successful:", userData);
+        
         toast({
           title: "Success",
           description: "Successfully logged in!",
@@ -62,6 +69,8 @@ export default function AdminLoginPage() {
         navigate("/admin");
       } else {
         const errorData = await response.json();
+        console.error("Login failed:", errorData);
+        
         toast({
           title: "Error",
           description: errorData.error || "Failed to login",

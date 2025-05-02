@@ -38,6 +38,8 @@ function Router() {
   const isAdminRoute = location.startsWith("/admin");
 
   if (isAdminRoute) {
+    // Admin login page is public, all other admin routes require authentication
+    // which is now checked in the AdminLayout component
     return (
       <Switch>
         <Route path="/admin/login" component={AdminLoginPage} />

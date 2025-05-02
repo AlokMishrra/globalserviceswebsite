@@ -40,6 +40,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth routes
   app.use("/api/auth", authRouter);
   
+  // Debug endpoint to check auth status
+  app.get("/api/auth/status", (req, res) => {
+    console.log("Session data:", req.session);
+    res.json({
+      isAuthenticated: req.session && req.session.userId ? true : false,
+      session: {
+        userId: req.session?.userId,
+        userRole: req.session?.userRole,
+      }
+    });
+  });
+  
   // File upload routes
   app.use("/api/admin/upload", uploadRouter);
   
