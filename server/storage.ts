@@ -89,6 +89,8 @@ export class MemStorage implements IStorage {
   private blogPostsMap: Map<number, BlogPost>;
   private contactSubmissionsMap: Map<number, ContactSubmission>;
   private jobOpeningsMap: Map<number, JobOpening>;
+  private teamMembersMap: Map<number, TeamMember>;
+  private companyInfoMap: Map<number, CompanyInfo>;
   private settings: any;
   
   private currentUserId: number;
@@ -101,6 +103,8 @@ export class MemStorage implements IStorage {
     this.blogPostsMap = new Map();
     this.contactSubmissionsMap = new Map();
     this.jobOpeningsMap = new Map();
+    this.teamMembersMap = new Map();
+    this.companyInfoMap = new Map();
     
     this.currentUserId = 1;
     this.currentContactSubmissionId = 1;
@@ -434,6 +438,101 @@ export class MemStorage implements IStorage {
   async updateSettings(settings: any): Promise<any> {
     this.settings = { ...this.settings, ...settings };
     return this.settings;
+  }
+  
+  // Team Member methods
+  async getTeamMember(id: number): Promise<TeamMember | undefined> {
+    return this.teamMembersMap.get(id);
+  }
+  
+  async getAllTeamMembers(): Promise<TeamMember[]> {
+    return Array.from(this.teamMembersMap.values())
+      .sort((a, b) => a.order - b.order);
+  }
+  
+  async createTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const id = Math.max(0, ...Array.from(this.teamMembersMap.keys()).concat([0])) + 1;
+    const newMember: TeamMember = {
+      ...member,
+      id,
+      imageUrl: member.imageUrl || null,
+      socialLinks: member.socialLinks || null,
+      order: member.order || 0,
+      isActive: member.isActive !== undefined ? member.isActive : true,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.teamMembersMap.set(id, newMember);
+    return newMember;
+  }
+  
+  async updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember> {
+    const existingMember = this.teamMembersMap.get(id);
+    if (!existingMember) {
+      throw new Error(`Team member with id ${id} not found`);
+    }
+    const updatedMember: TeamMember = { 
+      ...existingMember, 
+      ...member,
+      updatedAt: new Date()
+    };
+    this.teamMembersMap.set(id, updatedMember);
+    return updatedMember;
+  }
+  
+  async deleteTeamMember(id: number): Promise<boolean> {
+    return this.teamMembersMap.delete(id);
+  }
+  
+  // Company Info methods
+  async getCompanyInfo(id: number): Promise<CompanyInfo | undefined> {
+    return this.companyInfoMap.get(id);
+  }
+  
+  async getCompanyInfoBySection(section: string): Promise<CompanyInfo[]> {
+    return Array.from(this.companyInfoMap.values())
+      .filter(info => info.section === section)
+      .sort((a, b) => a.order - b.order);
+  }
+  
+  async getAllCompanyInfo(): Promise<CompanyInfo[]> {
+    return Array.from(this.companyInfoMap.values())
+      .sort((a, b) => a.section === b.section 
+        ? a.order - b.order 
+        : a.section.localeCompare(b.section));
+  }
+  
+  async createCompanyInfo(info: InsertCompanyInfo): Promise<CompanyInfo> {
+    const id = Math.max(0, ...Array.from(this.companyInfoMap.keys()).concat([0])) + 1;
+    const newInfo: CompanyInfo = {
+      ...info,
+      id,
+      imageUrl: info.imageUrl || null,
+      subtitle: info.subtitle || null,
+      order: info.order || 0,
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+    this.companyInfoMap.set(id, newInfo);
+    return newInfo;
+  }
+  
+  async updateCompanyInfo(id: number, info: Partial<InsertCompanyInfo>): Promise<CompanyInfo> {
+    const existingInfo = this.companyInfoMap.get(id);
+    if (!existingInfo) {
+      throw new Error(`Company info with id ${id} not found`);
+    }
+    const updatedInfo: CompanyInfo = { 
+      ...existingInfo, 
+      ...info,
+      updatedAt: new Date()
+    };
+    this.companyInfoMap.set(id, updatedInfo);
+    return updatedInfo;
+  }
+  
+  async deleteCompanyInfo(id: number): Promise<boolean> {
+    return this.companyInfoMap.delete(id);
   }
 }
 

@@ -1,11 +1,13 @@
-import { eq } from "drizzle-orm";
+import { eq, asc } from "drizzle-orm";
 import { 
   users, type User, type InsertUser,
   services, type Service, type InsertService,
   portfolioItems, type PortfolioItem, type InsertPortfolioItem,
   blogPosts, type BlogPost, type InsertBlogPost,
   contactSubmissions, type ContactSubmission, type InsertContactSubmission,
-  jobOpenings, type JobOpening, type InsertJobOpening
+  jobOpenings, type JobOpening, type InsertJobOpening,
+  teamMembers, type TeamMember, type InsertTeamMember,
+  companyInfo, type CompanyInfo, type InsertCompanyInfo
 } from "@shared/schema";
 import { IStorage } from "./storage";
 import { db } from "./db";
@@ -321,5 +323,71 @@ export class DatabaseStorage implements IStorage {
       console.error("Error updating settings:", error);
       throw error;
     }
+  }
+
+  // Team Member methods
+  async getTeamMember(id: number): Promise<TeamMember | undefined> {
+    const [member] = await db.select().from(teamMembers).where(eq(teamMembers.id, id));
+    return member || undefined;
+  }
+  
+  async getAllTeamMembers(): Promise<TeamMember[]> {
+    return await db.select().from(teamMembers).orderBy(asc(teamMembers.order));
+  }
+  
+  async createTeamMember(member: InsertTeamMember): Promise<TeamMember> {
+    const [newMember] = await db.insert(teamMembers).values(member).returning();
+    return newMember;
+  }
+  
+  async updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember> {
+    const [updatedMember] = await db
+      .update(teamMembers)
+      .set(member)
+      .where(eq(teamMembers.id, id))
+      .returning();
+    return updatedMember;
+  }
+  
+  async deleteTeamMember(id: number): Promise<boolean> {
+    await db.delete(teamMembers).where(eq(teamMembers.id, id));
+    return true;
+  }
+  
+  // Company Info methods
+  async getCompanyInfo(id: number): Promise<CompanyInfo | undefined> {
+    const [info] = await db.select().from(companyInfo).where(eq(companyInfo.id, id));
+    return info || undefined;
+  }
+  
+  async getCompanyInfoBySection(section: string): Promise<CompanyInfo[]> {
+    return await db
+      .select()
+      .from(companyInfo)
+      .where(eq(companyInfo.section, section))
+      .orderBy(asc(companyInfo.order));
+  }
+  
+  async getAllCompanyInfo(): Promise<CompanyInfo[]> {
+    return await db.select().from(companyInfo).orderBy(asc(companyInfo.section), asc(companyInfo.order));
+  }
+  
+  async createCompanyInfo(info: InsertCompanyInfo): Promise<CompanyInfo> {
+    const [newInfo] = await db.insert(companyInfo).values(info).returning();
+    return newInfo;
+  }
+  
+  async updateCompanyInfo(id: number, info: Partial<InsertCompanyInfo>): Promise<CompanyInfo> {
+    const [updatedInfo] = await db
+      .update(companyInfo)
+      .set(info)
+      .where(eq(companyInfo.id, id))
+      .returning();
+    return updatedInfo;
+  }
+  
+  async deleteCompanyInfo(id: number): Promise<boolean> {
+    await db.delete(companyInfo).where(eq(companyInfo.id, id));
+    return true;
   }
 }
