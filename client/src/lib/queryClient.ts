@@ -8,9 +8,35 @@ async function throwIfResNotOk(res: Response) {
 }
 
 export async function apiRequest(
-  endpoint: string,
-  options?: RequestInit
+  endpointOrMethodOrOptions: string,
+  endpointOrOptions?: string | RequestInit,
+  bodyOrOptions?: any
 ): Promise<Response> {
+  let endpoint: string;
+  let options: RequestInit = {};
+
+  // Handle different calling patterns
+  if (typeof endpointOrOptions === 'string') {
+    // apiRequest(method, endpoint, body)
+    const method = endpointOrMethodOrOptions;
+    endpoint = endpointOrOptions as string;
+    
+    if (bodyOrOptions) {
+      options = {
+        method,
+        body: typeof bodyOrOptions === 'string' ? bodyOrOptions : JSON.stringify(bodyOrOptions),
+      };
+    } else {
+      options = { method };
+    }
+  } else {
+    // apiRequest(endpoint, options?)
+    endpoint = endpointOrMethodOrOptions;
+    if (endpointOrOptions && typeof endpointOrOptions !== 'string') {
+      options = endpointOrOptions as RequestInit;
+    }
+  }
+
   const res = await fetch(endpoint, {
     credentials: "include",
     headers: {

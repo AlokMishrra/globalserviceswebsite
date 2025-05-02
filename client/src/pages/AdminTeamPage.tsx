@@ -73,7 +73,10 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to create a team member
   const createMutation = useMutation({
     mutationFn: async (data: TeamMemberFormValues) => {
-      const response = await apiRequest('POST', '/api/admin/team', data);
+      const response = await apiRequest('/api/admin/team', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -97,7 +100,10 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to update a team member
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: TeamMemberFormValues }) => {
-      const response = await apiRequest('PUT', `/api/admin/team/${id}`, data);
+      const response = await apiRequest(`/api/admin/team/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -120,7 +126,9 @@ const AdminTeamPage: React.FC = () => {
   // Mutation to delete a team member
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/team/${id}`);
+      await apiRequest(`/api/admin/team/${id}`, {
+        method: 'DELETE'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/team'] });

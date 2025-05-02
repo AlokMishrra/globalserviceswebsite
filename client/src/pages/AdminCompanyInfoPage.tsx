@@ -9,13 +9,14 @@ import { useToast } from '@/hooks/use-toast';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { TableCell, TableRow, TableHeader, TableHead, Table, TableBody } from '@/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Trash2, Pencil, Plus, X, Eye } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Trash2, Pencil, Plus } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import ImageUploader from '@/components/ImageUploader';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 
 interface CompanyInfo {
   id: number;
@@ -34,8 +35,8 @@ const companyInfoSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   content: z.string().min(1, 'Content is required'),
   section: z.string().min(1, 'Section is required'),
-  subtitle: z.string().nullable().optional(),
-  imageUrl: z.string().nullable().optional(),
+  subtitle: z.string().nullable(),
+  imageUrl: z.string().nullable(),
   order: z.number().min(0, 'Order must be a positive number'),
 });
 
@@ -67,8 +68,8 @@ const AdminCompanyInfoPage: React.FC = () => {
       title: '',
       content: '',
       section: 'about',
-      subtitle: '',
-      imageUrl: '',
+      subtitle: null,
+      imageUrl: null,
       order: 0,
     },
   });
@@ -101,7 +102,7 @@ const AdminCompanyInfoPage: React.FC = () => {
         description: 'Company information created successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
         description: 'Failed to create company information.',
@@ -127,7 +128,7 @@ const AdminCompanyInfoPage: React.FC = () => {
         description: 'Company information updated successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
         description: 'Failed to update company information.',
@@ -152,7 +153,7 @@ const AdminCompanyInfoPage: React.FC = () => {
         description: 'Company information deleted successfully.',
       });
     },
-    onError: (error) => {
+    onError: (error: Error) => {
       toast({
         title: 'Error',
         description: 'Failed to delete company information.',
@@ -175,8 +176,8 @@ const AdminCompanyInfoPage: React.FC = () => {
       title: info.title,
       content: info.content,
       section: info.section,
-      subtitle: info.subtitle || '',
-      imageUrl: info.imageUrl || '',
+      subtitle: info.subtitle,
+      imageUrl: info.imageUrl,
       order: info.order,
     });
     setIsEditDialogOpen(true);
@@ -205,8 +206,8 @@ const AdminCompanyInfoPage: React.FC = () => {
       title: '',
       content: '',
       section: activeFilter || 'about',
-      subtitle: '',
-      imageUrl: '',
+      subtitle: null,
+      imageUrl: null,
       order: countInSection,
     });
     setIsAddDialogOpen(true);
@@ -300,159 +301,293 @@ const AdminCompanyInfoPage: React.FC = () => {
 
         {/* Add Company Info Dialog */}
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Add Company Information</DialogTitle>
               <DialogDescription>Add new information about your company.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="col-span-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" {...form.register('title')} />
-                  {form.formState.errors.title && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="About Our Company" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="subtitle">Subtitle (Optional)</Label>
-                  <Input id="subtitle" {...form.register('subtitle')} />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="section">Section</Label>
-                  <Select 
-                    value={form.watch('section')} 
-                    onValueChange={(value) => form.setValue('section', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a section" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMPANY_SECTIONS.map(section => (
-                        <SelectItem key={section.value} value={section.value}>
-                          {section.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.section && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.section.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subtitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subtitle (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Our story and mission" 
+                          {...field} 
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(e.target.value || null)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea id="content" {...form.register('content')} rows={5} />
-                  {form.formState.errors.content && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.content.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="section"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Section</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a section" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {COMPANY_SECTIONS.map(section => (
+                            <SelectItem key={section.value} value={section.value}>
+                              {section.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-                  <Input id="imageUrl" {...form.register('imageUrl')} />
-                </div>
-                <div className="col-span-1">
-                  <Label htmlFor="order">Display Order</Label>
-                  <Input 
-                    id="order" 
-                    type="number" 
-                    {...form.register('order', { valueAsNumber: true })} 
-                  />
-                  {form.formState.errors.order && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.order.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter the content for this section..." 
+                          className="min-h-[120px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={createMutation.isPending}>
-                  {createMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              </DialogFooter>
-            </form>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUploader
+                          currentImageUrl={field.value}
+                          onImageChange={(url) => field.onChange(url)}
+                          label="Section Image"
+                          description="Upload an image for this company information section (optional)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Order</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Lower numbers display first
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={createMutation.isPending}>
+                    {createMutation.isPending ? 'Saving...' : 'Save'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 
         {/* Edit Company Info Dialog */}
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="max-w-lg">
+          <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Company Information</DialogTitle>
               <DialogDescription>Update company information.</DialogDescription>
             </DialogHeader>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid grid-cols-2 gap-4 py-4">
-                <div className="col-span-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input id="title" {...form.register('title')} />
-                  {form.formState.errors.title && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.title.message}</p>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <FormField
+                  control={form.control}
+                  name="title"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Title</FormLabel>
+                      <FormControl>
+                        <Input placeholder="About Our Company" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="subtitle">Subtitle (Optional)</Label>
-                  <Input id="subtitle" {...form.register('subtitle')} />
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="section">Section</Label>
-                  <Select 
-                    value={form.watch('section')} 
-                    onValueChange={(value) => form.setValue('section', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a section" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {COMPANY_SECTIONS.map(section => (
-                        <SelectItem key={section.value} value={section.value}>
-                          {section.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  {form.formState.errors.section && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.section.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="subtitle"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Subtitle (Optional)</FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Our story and mission" 
+                          {...field} 
+                          value={field.value || ''} 
+                          onChange={(e) => field.onChange(e.target.value || null)}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="content">Content</Label>
-                  <Textarea id="content" {...form.register('content')} rows={5} />
-                  {form.formState.errors.content && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.content.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="section"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Section</FormLabel>
+                      <Select 
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select a section" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {COMPANY_SECTIONS.map(section => (
+                            <SelectItem key={section.value} value={section.value}>
+                              {section.label}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-                <div className="col-span-2">
-                  <Label htmlFor="imageUrl">Image URL (Optional)</Label>
-                  <Input id="imageUrl" {...form.register('imageUrl')} />
-                </div>
-                <div className="col-span-1">
-                  <Label htmlFor="order">Display Order</Label>
-                  <Input 
-                    id="order" 
-                    type="number" 
-                    {...form.register('order', { valueAsNumber: true })} 
-                  />
-                  {form.formState.errors.order && (
-                    <p className="text-red-500 text-sm mt-1">{form.formState.errors.order.message}</p>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Content</FormLabel>
+                      <FormControl>
+                        <Textarea 
+                          placeholder="Enter the content for this section..." 
+                          className="min-h-[120px]"
+                          {...field} 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
                   )}
-                </div>
-              </div>
-              <DialogFooter>
-                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={updateMutation.isPending}>
-                  {updateMutation.isPending ? 'Saving...' : 'Save'}
-                </Button>
-              </DialogFooter>
-            </form>
+                />
+
+                <FormField
+                  control={form.control}
+                  name="imageUrl"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormControl>
+                        <ImageUploader
+                          currentImageUrl={field.value}
+                          onImageChange={(url) => field.onChange(url)}
+                          label="Section Image"
+                          description="Upload an image for this company information section (optional)"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="order"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Display Order</FormLabel>
+                      <FormControl>
+                        <Input 
+                          type="number" 
+                          min="0"
+                          {...field}
+                          onChange={(e) => field.onChange(parseInt(e.target.value))}
+                          value={field.value}
+                        />
+                      </FormControl>
+                      <FormDescription>
+                        Lower numbers display first
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <DialogFooter>
+                  <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                    Cancel
+                  </Button>
+                  <Button type="submit" disabled={updateMutation.isPending}>
+                    {updateMutation.isPending ? 'Updating...' : 'Update'}
+                  </Button>
+                </DialogFooter>
+              </form>
+            </Form>
           </DialogContent>
         </Dialog>
 
         {/* Delete Confirmation Dialog */}
         <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-          <DialogContent className="max-w-md">
+          <DialogContent>
             <DialogHeader>
               <DialogTitle>Confirm Deletion</DialogTitle>
               <DialogDescription>
@@ -460,10 +595,8 @@ const AdminCompanyInfoPage: React.FC = () => {
               </DialogDescription>
             </DialogHeader>
             <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="button" variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
+              <Button variant="outline" onClick={() => setIsDeleteDialogOpen(false)}>Cancel</Button>
+              <Button variant="destructive" onClick={confirmDelete} disabled={deleteMutation.isPending}>
                 {deleteMutation.isPending ? 'Deleting...' : 'Delete'}
               </Button>
             </DialogFooter>
