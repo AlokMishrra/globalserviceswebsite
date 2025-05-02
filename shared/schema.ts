@@ -130,3 +130,48 @@ export const settings = pgTable("settings", {
 export const insertSettingsSchema = createInsertSchema(settings);
 export type InsertSettings = z.infer<typeof insertSettingsSchema>;
 export type Settings = typeof settings.$inferSelect;
+
+// Company information and team members
+export const teamMembers = pgTable("team_members", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  position: text("position").notNull(),
+  bio: text("bio").notNull(),
+  imageUrl: text("image_url"),
+  socialLinks: text("social_links"), // JSON stored as text
+  order: integer("order").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertTeamMemberSchema = createInsertSchema(teamMembers).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertTeamMember = z.infer<typeof insertTeamMemberSchema>;
+export type TeamMember = typeof teamMembers.$inferSelect;
+
+// Company information page content
+export const companyInfo = pgTable("company_info", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  subtitle: text("subtitle"),
+  content: text("content").notNull(),
+  imageUrl: text("image_url"),
+  section: text("section").notNull(), // e.g., "mission", "vision", "history"
+  order: integer("order").notNull().default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertCompanyInfoSchema = createInsertSchema(companyInfo).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export type InsertCompanyInfo = z.infer<typeof insertCompanyInfoSchema>;
+export type CompanyInfo = typeof companyInfo.$inferSelect;

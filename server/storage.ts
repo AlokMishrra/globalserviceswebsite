@@ -4,7 +4,9 @@ import {
   portfolioItems, type PortfolioItem, type InsertPortfolioItem,
   blogPosts, type BlogPost, type InsertBlogPost,
   contactSubmissions, type ContactSubmission, type InsertContactSubmission,
-  jobOpenings, type JobOpening, type InsertJobOpening
+  jobOpenings, type JobOpening, type InsertJobOpening,
+  teamMembers, type TeamMember, type InsertTeamMember,
+  companyInfo, type CompanyInfo, type InsertCompanyInfo
 } from "@shared/schema";
 import { services as mockServices } from "../client/src/lib/data";
 import { portfolioItems as mockPortfolioItems } from "../client/src/lib/data";
@@ -63,6 +65,21 @@ export interface IStorage {
   // Settings methods
   getSettings(): Promise<any>;
   updateSettings(settings: any): Promise<any>;
+  
+  // Team Member methods
+  getTeamMember(id: number): Promise<TeamMember | undefined>;
+  getAllTeamMembers(): Promise<TeamMember[]>;
+  createTeamMember(member: InsertTeamMember): Promise<TeamMember>;
+  updateTeamMember(id: number, member: Partial<InsertTeamMember>): Promise<TeamMember>;
+  deleteTeamMember(id: number): Promise<boolean>;
+  
+  // Company Info methods
+  getCompanyInfo(id: number): Promise<CompanyInfo | undefined>;
+  getCompanyInfoBySection(section: string): Promise<CompanyInfo[]>;
+  getAllCompanyInfo(): Promise<CompanyInfo[]>;
+  createCompanyInfo(info: InsertCompanyInfo): Promise<CompanyInfo>;
+  updateCompanyInfo(id: number, info: Partial<InsertCompanyInfo>): Promise<CompanyInfo>;
+  deleteCompanyInfo(id: number): Promise<boolean>;
 }
 
 export class MemStorage implements IStorage {
