@@ -346,18 +346,44 @@ const ContactPage: React.FC = () => {
               <div>
                 <h3 className="text-xl font-bold font-montserrat mb-4">Connect With Us</h3>
                 <div className="flex space-x-4 mb-8">
-                  <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
-                    <Facebook className="text-primary hover:text-white h-5 w-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
-                    <Twitter className="text-primary hover:text-white h-5 w-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
-                    <Instagram className="text-primary hover:text-white h-5 w-5" />
-                  </a>
-                  <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
-                    <Linkedin className="text-primary hover:text-white h-5 w-5" />
-                  </a>
+                  {settings?.social?.facebook && (
+                    <a href={settings.social.facebook} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                      <Facebook className="text-primary hover:text-white h-5 w-5" />
+                    </a>
+                  )}
+                  {settings?.social?.twitter && (
+                    <a href={settings.social.twitter} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                      <Twitter className="text-primary hover:text-white h-5 w-5" />
+                    </a>
+                  )}
+                  {settings?.social?.instagram && (
+                    <a href={settings.social.instagram} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                      <Instagram className="text-primary hover:text-white h-5 w-5" />
+                    </a>
+                  )}
+                  {settings?.social?.linkedin && (
+                    <a href={settings.social.linkedin} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                      <Linkedin className="text-primary hover:text-white h-5 w-5" />
+                    </a>
+                  )}
+                  {/* Fallback icons if no social links are configured */}
+                  {!settings?.social?.facebook && !settings?.social?.twitter && 
+                   !settings?.social?.instagram && !settings?.social?.linkedin && (
+                    <>
+                      <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                        <Facebook className="text-primary hover:text-white h-5 w-5" />
+                      </a>
+                      <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                        <Twitter className="text-primary hover:text-white h-5 w-5" />
+                      </a>
+                      <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                        <Instagram className="text-primary hover:text-white h-5 w-5" />
+                      </a>
+                      <a href="#" className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center hover:bg-primary transition-colors">
+                        <Linkedin className="text-primary hover:text-white h-5 w-5" />
+                      </a>
+                    </>
+                  )}
                 </div>
                 
                 <div className="relative h-60 md:h-80 rounded-lg overflow-hidden">

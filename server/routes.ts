@@ -487,7 +487,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Website Settings Management
   
-  // Get website settings
+  // Get website settings (public endpoint)
+  app.get('/api/settings', async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch settings' });
+    }
+  });
+  
+  // Get website settings (admin endpoint)
   app.get('/api/admin/settings', isAdmin, async (req, res) => {
     try {
       const settings = await storage.getSettings();
