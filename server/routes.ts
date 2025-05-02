@@ -1,4 +1,5 @@
 import type { Express } from "express";
+import express from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { 
@@ -11,8 +12,10 @@ import {
 } from "@shared/schema";
 import { z } from "zod";
 import authRouter, { isAdmin, isAuthenticated } from "./auth";
+import uploadRouter from "./api/upload";
 import session from "express-session";
 import MemoryStore from "memorystore";
+import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session middleware
@@ -32,6 +35,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Auth routes
   app.use("/api/auth", authRouter);
+  
+  // File upload routes
+  app.use("/api/admin/upload", uploadRouter);
+  
+  // Serve uploaded files
+  const uploadsDir = path.join(process.cwd(), 'uploads');
+  app.use('/uploads', express.static(uploadsDir));
 
   // PUBLIC API ROUTES
   

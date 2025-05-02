@@ -1,124 +1,123 @@
 import React, { useState } from "react";
-import AdminLayout from "@/components/layout/AdminLayout";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { apiRequest } from "@/lib/queryClient";
+import AdminLayout from "@/components/layout/AdminLayout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useMutation, useQuery } from "@tanstack/react-query";
 import { Loader2, Save } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
-// Define schemas for the different settings sections
-const generalSettingsSchema = z.object({
-  siteName: z.string().min(2, "Site name is required"),
-  siteTagline: z.string().optional(),
-  siteDescription: z.string().optional(),
-  logoUrl: z.string().optional(),
-  faviconUrl: z.string().optional(),
-  primaryColor: z.string().optional(),
-  secondaryColor: z.string().optional(),
-  accentColor: z.string().optional(),
-});
+interface Settings {
+  general: {
+    siteName: string;
+    siteTagline: string;
+    siteDescription: string;
+    logoUrl: string;
+    faviconUrl: string;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+  };
+  header: {
+    showLogo: boolean;
+    showNav: boolean;
+    showCTA: boolean;
+    ctaText: string;
+    ctaLink: string;
+    navItems: Array<{
+      text: string;
+      link: string;
+      visible: boolean;
+    }>;
+  };
+  footer: {
+    showFooter: boolean;
+    copyrightText: string;
+    footerText: string;
+    showSocialIcons: boolean;
+    showContactInfo: boolean;
+    showQuickLinks: boolean;
+    columns: Array<{
+      title: string;
+      links: Array<{
+        text: string;
+        url: string;
+      }>;
+    }>;
+  };
+  contact: {
+    email: string;
+    phone: string;
+    address: string;
+    mapEmbedUrl: string;
+    contactFormEmail: string;
+  };
+  social: {
+    facebook: string;
+    twitter: string;
+    instagram: string;
+    linkedin: string;
+    youtube: string;
+    pinterest: string;
+  };
+}
 
-const contactSettingsSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().optional(),
-  address: z.string().optional(),
-  mapEmbedUrl: z.string().optional(),
-  contactFormEmail: z.string().email("Please enter a valid email address"),
-});
-
-const socialSettingsSchema = z.object({
-  facebook: z.string().optional(),
-  twitter: z.string().optional(),
-  instagram: z.string().optional(),
-  linkedin: z.string().optional(),
-  youtube: z.string().optional(),
-  pinterest: z.string().optional(),
-});
-
-const footerSettingsSchema = z.object({
-  copyrightText: z.string().optional(),
-  footerText: z.string().optional(),
-  showSocialIcons: z.boolean().default(true),
-  showContactInfo: z.boolean().default(true),
-  showQuickLinks: z.boolean().default(true),
-});
-
-// Combine all schemas
-const settingsSchema = z.object({
-  general: generalSettingsSchema,
-  contact: contactSettingsSchema,
-  social: socialSettingsSchema,
-  footer: footerSettingsSchema,
-});
-
-type SettingsFormValues = z.infer<typeof settingsSchema>;
-
-export default function AdminSettingsPage() {
-  const { toast } = useToast();
+const AdminSettingsPage: React.FC = () => {
   const [activeTab, setActiveTab] = useState("general");
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [faviconFile, setFaviconFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [faviconPreview, setFaviconPreview] = useState<string | null>(null);
+  
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  // Query to fetch settings
-  const { 
-    data: settings, 
-    isLoading, 
-    error 
-  } = useQuery<any>({
+  // Fetch settings
+  const { data: settings, isLoading } = useQuery<Settings>({
     queryKey: ['/api/admin/settings'],
     queryFn: async () => {
-      try {
-        const res = await apiRequest('/api/admin/settings');
-        return await res.json();
-      } catch (err) {
-        // If settings don't exist yet, return default values
-        return {
-          general: {
-            siteName: "Global Services",
-            siteTagline: "Digital Marketing Agency",
-            siteDescription: "Full-scale Digital Marketing Agency creating innovative solutions",
-            logoUrl: "",
-            faviconUrl: "",
-            primaryColor: "#10B981",
-            secondaryColor: "#F3F4F6",
-            accentColor: "#FFC107",
-          },
-          contact: {
-            email: "contact@example.com",
-            phone: "+1 (555) 123-4567",
-            address: "123 Main St, New York, NY 10001",
-            mapEmbedUrl: "",
-            contactFormEmail: "contact@example.com",
-          },
-          social: {
-            facebook: "https://facebook.com/globalservices",
-            twitter: "https://twitter.com/globalservices",
-            instagram: "https://instagram.com/globalservices",
-            linkedin: "https://linkedin.com/company/globalservices",
-            youtube: "",
-            pinterest: "",
-          },
-          footer: {
-            copyrightText: "© 2025 Global Services. All rights reserved.",
-            footerText: "Strategy. Creativity. Results.",
-            showSocialIcons: true,
-            showContactInfo: true,
-            showQuickLinks: true,
-          }
-        };
+      const response = await apiRequest('/api/admin/settings');
+      if (!response.ok) {
+        throw new Error('Failed to fetch settings');
       }
+      return response.json();
     },
   });
 
-  // Form definition
-  const form = useForm<SettingsFormValues>({
-    resolver: zodResolver(settingsSchema),
+  const form = useForm<Settings>({
     defaultValues: settings || {
       general: {
         siteName: "",
@@ -126,9 +125,55 @@ export default function AdminSettingsPage() {
         siteDescription: "",
         logoUrl: "",
         faviconUrl: "",
-        primaryColor: "",
-        secondaryColor: "",
-        accentColor: "",
+        primaryColor: "#10B981",
+        secondaryColor: "#F3F4F6",
+        accentColor: "#FFC107",
+      },
+      header: {
+        showLogo: true,
+        showNav: true,
+        showCTA: true,
+        ctaText: "Contact Us",
+        ctaLink: "/contact",
+        navItems: [
+          { text: "Home", link: "/", visible: true },
+          { text: "About", link: "/about", visible: true },
+          { text: "Services", link: "/services", visible: true },
+          { text: "Work", link: "/work", visible: true },
+          { text: "Blog", link: "/blog", visible: true },
+          { text: "Careers", link: "/careers", visible: true },
+          { text: "Contact", link: "/contact", visible: true },
+        ],
+      },
+      footer: {
+        showFooter: true,
+        copyrightText: "© 2025 Global Services. All rights reserved.",
+        footerText: "Strategy. Creativity. Results.",
+        showSocialIcons: true,
+        showContactInfo: true,
+        showQuickLinks: true,
+        columns: [
+          {
+            title: "Quick Links",
+            links: [
+              { text: "Home", url: "/" },
+              { text: "About", url: "/about" },
+              { text: "Services", url: "/services" },
+              { text: "Portfolio", url: "/work" },
+              { text: "Contact", url: "/contact" },
+            ],
+          },
+          {
+            title: "Services",
+            links: [
+              { text: "Social Media Marketing", url: "/services/social-media-marketing" },
+              { text: "Content Marketing", url: "/services/content-marketing" },
+              { text: "SEO Optimization", url: "/services/seo-optimization" },
+              { text: "Email Marketing", url: "/services/email-marketing" },
+              { text: "PPC Advertising", url: "/services/ppc-advertising" },
+            ],
+          },
+        ],
       },
       contact: {
         email: "",
@@ -145,74 +190,142 @@ export default function AdminSettingsPage() {
         youtube: "",
         pinterest: "",
       },
-      footer: {
-        copyrightText: "",
-        footerText: "",
-        showSocialIcons: true,
-        showContactInfo: true,
-        showQuickLinks: true,
-      }
     },
   });
 
-  // Set form values when settings are loaded
+  // Update form when settings data is loaded
   React.useEffect(() => {
     if (settings) {
-      Object.keys(settings).forEach(section => {
-        Object.keys(settings[section]).forEach(field => {
-          form.setValue(`${section}.${field}` as any, settings[section][field]);
-        });
-      });
+      form.reset(settings);
+      // Set preview URLs if they exist
+      if (settings.general.logoUrl) {
+        setLogoPreview(settings.general.logoUrl);
+      }
+      if (settings.general.faviconUrl) {
+        setFaviconPreview(settings.general.faviconUrl);
+      }
     }
   }, [settings, form]);
 
-  // Mutation to save settings
-  const saveSettingsMutation = useMutation({
-    mutationFn: async (data: SettingsFormValues) => {
-      const res = await apiRequest('/api/admin/settings', {
+  // Update settings mutation
+  const { mutate: updateSettings, isPending } = useMutation({
+    mutationFn: async (data: Settings) => {
+      // Handle logo upload if there's a file
+      if (logoFile) {
+        const formData = new FormData();
+        formData.append('file', logoFile);
+        formData.append('type', 'logo');
+        
+        const uploadResponse = await apiRequest('/api/admin/upload', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            // Don't set Content-Type, browser will set it with boundary for FormData
+          },
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload logo');
+        }
+        
+        const uploadResult = await uploadResponse.json();
+        data.general.logoUrl = uploadResult.url;
+      }
+      
+      // Handle favicon upload if there's a file
+      if (faviconFile) {
+        const formData = new FormData();
+        formData.append('file', faviconFile);
+        formData.append('type', 'favicon');
+        
+        const uploadResponse = await apiRequest('/api/admin/upload', {
+          method: 'POST',
+          body: formData,
+          headers: {
+            // Don't set Content-Type, browser will set it with boundary for FormData
+          },
+        });
+        
+        if (!uploadResponse.ok) {
+          throw new Error('Failed to upload favicon');
+        }
+        
+        const uploadResult = await uploadResponse.json();
+        data.general.faviconUrl = uploadResult.url;
+      }
+
+      // Update settings
+      const response = await apiRequest('/api/admin/settings', {
         method: 'POST',
-        body: JSON.stringify(data)
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
       });
-      return await res.json();
+
+      if (!response.ok) {
+        throw new Error('Failed to update settings');
+      }
+
+      return response.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
       toast({
-        title: "Settings saved",
-        description: "Your website settings have been successfully updated",
+        title: "Settings Updated",
+        description: "Your website settings have been updated successfully.",
       });
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      
+      // Reset file inputs
+      setLogoFile(null);
+      setFaviconFile(null);
     },
     onError: (error: Error) => {
       toast({
-        title: "Failed to save settings",
-        description: error.message,
+        title: "Error",
+        description: error.message || "Failed to update settings. Please try again.",
         variant: "destructive",
       });
-    }
+    },
   });
 
-  // Form submission handler
-  const onSubmit = async (data: SettingsFormValues) => {
-    await saveSettingsMutation.mutateAsync(data);
+  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setLogoFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = () => {
+        setLogoPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleFaviconChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setFaviconFile(file);
+      
+      // Create preview URL
+      const reader = new FileReader();
+      reader.onload = () => {
+        setFaviconPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const onSubmit = (data: Settings) => {
+    updateSettings(data);
   };
 
   if (isLoading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center h-full">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </AdminLayout>
-    );
-  }
-
-  if (error) {
-    return (
-      <AdminLayout>
-        <div className="flex flex-col items-center justify-center h-full text-center">
-          <h2 className="text-2xl font-bold text-destructive mb-2">Error Loading Settings</h2>
-          <p className="text-muted-foreground mb-4">{(error as Error).message}</p>
-          <Button onClick={() => window.location.reload()}>Try Again</Button>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
         </div>
       </AdminLayout>
     );
@@ -220,14 +333,20 @@ export default function AdminSettingsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-3xl font-bold">Website Settings</h1>
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold">Website Settings</h1>
+            <p className="text-muted-foreground">
+              Manage your website appearance, content, and functionality
+            </p>
+          </div>
           <Button
             onClick={form.handleSubmit(onSubmit)}
-            disabled={saveSettingsMutation.isPending}
+            className="bg-primary hover:bg-primary/90"
+            disabled={isPending}
           >
-            {saveSettingsMutation.isPending ? (
+            {isPending ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 Saving...
@@ -235,94 +354,114 @@ export default function AdminSettingsPage() {
             ) : (
               <>
                 <Save className="mr-2 h-4 w-4" />
-                Save All Settings
+                Save Changes
               </>
             )}
           </Button>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Manage Website Content</CardTitle>
-            <CardDescription>
-              Configure all aspects of your website including general information, 
-              contact details, social media links, and footer content.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form className="space-y-8">
-                <Tabs 
-                  defaultValue="general" 
-                  value={activeTab} 
-                  onValueChange={setActiveTab} 
-                  className="w-full"
-                >
-                  <TabsList className="grid grid-cols-4 mb-8">
-                    <TabsTrigger value="general">General</TabsTrigger>
-                    <TabsTrigger value="contact">Contact</TabsTrigger>
-                    <TabsTrigger value="social">Social Media</TabsTrigger>
-                    <TabsTrigger value="footer">Footer</TabsTrigger>
-                  </TabsList>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)}>
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="mb-8">
+                <TabsTrigger value="general">General</TabsTrigger>
+                <TabsTrigger value="header">Header</TabsTrigger>
+                <TabsTrigger value="footer">Footer</TabsTrigger>
+                <TabsTrigger value="contact">Contact Info</TabsTrigger>
+                <TabsTrigger value="social">Social Media</TabsTrigger>
+              </TabsList>
 
-                  {/* General Settings */}
-                  <TabsContent value="general" className="space-y-6">
-                    <div className="grid gap-6">
-                      <FormField
-                        control={form.control}
-                        name="general.siteName"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Site Name</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              The name of your website
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+              {/* General Settings */}
+              <TabsContent value="general">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>General Settings</CardTitle>
+                    <CardDescription>
+                      Basic information about your website
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="general.siteName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Site Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Website Name" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            The name of your website, displayed in the browser tab
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <FormField
-                        control={form.control}
-                        name="general.siteTagline"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Site Tagline</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
-                            <FormDescription>
-                              A short tagline for your website
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                    <FormField
+                      control={form.control}
+                      name="general.siteTagline"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Site Tagline</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your Website Tagline" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            A short description of your business
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-                      <FormField
-                        control={form.control}
-                        name="general.siteDescription"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Site Description</FormLabel>
-                            <FormControl>
-                              <Textarea 
-                                {...field} 
-                                className="min-h-24"
+                    <FormField
+                      control={form.control}
+                      name="general.siteDescription"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Site Description</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="Describe your website in a few sentences"
+                              className="resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Used for SEO and social media sharing
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <FormLabel>Logo</FormLabel>
+                        <div className="flex items-center gap-4">
+                          {logoPreview && (
+                            <div className="w-16 h-16 overflow-hidden rounded border flex items-center justify-center bg-white">
+                              <img 
+                                src={logoPreview} 
+                                alt="Logo preview" 
+                                className="max-w-full max-h-full object-contain" 
                               />
-                            </FormControl>
-                            <FormDescription>
-                              A brief description of your website (used for SEO)
-                            </FormDescription>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <Input
+                              id="logo-upload"
+                              type="file"
+                              accept="image/*"
+                              onChange={handleLogoChange}
+                            />
+                          </div>
+                        </div>
+                        <FormDescription>
+                          Upload your website logo (Recommended size: 200x80px)
+                        </FormDescription>
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <FormField
                           control={form.control}
                           name="general.logoUrl"
@@ -330,15 +469,45 @@ export default function AdminSettingsPage() {
                             <FormItem>
                               <FormLabel>Logo URL</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input 
+                                  placeholder="https://example.com/logo.png" 
+                                  {...field} 
+                                  disabled={!!logoFile}
+                                />
                               </FormControl>
                               <FormDescription>
-                                URL to your website logo
+                                Or provide a URL to your logo
                               </FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <FormLabel>Favicon</FormLabel>
+                        <div className="flex items-center gap-4">
+                          {faviconPreview && (
+                            <div className="w-16 h-16 overflow-hidden rounded border flex items-center justify-center bg-white">
+                              <img 
+                                src={faviconPreview} 
+                                alt="Favicon preview" 
+                                className="max-w-full max-h-full object-contain" 
+                              />
+                            </div>
+                          )}
+                          <div className="flex-1">
+                            <Input
+                              id="favicon-upload"
+                              type="file"
+                              accept="image/x-icon,image/png,image/svg+xml"
+                              onChange={handleFaviconChange}
+                            />
+                          </div>
+                        </div>
+                        <FormDescription>
+                          Upload your website favicon (Recommended size: 32x32px)
+                        </FormDescription>
 
                         <FormField
                           control={form.control}
@@ -347,137 +516,41 @@ export default function AdminSettingsPage() {
                             <FormItem>
                               <FormLabel>Favicon URL</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input 
+                                  placeholder="https://example.com/favicon.ico" 
+                                  {...field} 
+                                  disabled={!!faviconFile}
+                                />
                               </FormControl>
                               <FormDescription>
-                                URL to your website favicon
+                                Or provide a URL to your favicon
                               </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="general.primaryColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Primary Color</FormLabel>
-                              <div className="flex gap-2">
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <Input 
-                                  type="color" 
-                                  value={field.value || "#10B981"} 
-                                  onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-10 p-1 h-10"
-                                />
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="general.secondaryColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Secondary Color</FormLabel>
-                              <div className="flex gap-2">
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <Input 
-                                  type="color" 
-                                  value={field.value || "#F3F4F6"} 
-                                  onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-10 p-1 h-10"
-                                />
-                              </div>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="general.accentColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Accent Color</FormLabel>
-                              <div className="flex gap-2">
-                                <FormControl>
-                                  <Input {...field} />
-                                </FormControl>
-                                <Input 
-                                  type="color" 
-                                  value={field.value || "#FFC107"} 
-                                  onChange={(e) => field.onChange(e.target.value)}
-                                  className="w-10 p-1 h-10"
-                                />
-                              </div>
                               <FormMessage />
                             </FormItem>
                           )}
                         />
                       </div>
                     </div>
-                  </TabsContent>
 
-                  {/* Contact Settings */}
-                  <TabsContent value="contact" className="space-y-6">
-                    <div className="grid gap-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="contact.email"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Email Address</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="email" />
-                              </FormControl>
-                              <FormDescription>
-                                Public email address displayed on the website
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="contact.phone"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Phone Number</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormDescription>
-                                Public phone number displayed on the website
-                              </FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
                       <FormField
                         control={form.control}
-                        name="contact.address"
+                        name="general.primaryColor"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Address</FormLabel>
-                            <FormControl>
-                              <Textarea {...field} />
-                            </FormControl>
+                            <FormLabel>Primary Color</FormLabel>
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input type="color" {...field} className="w-12 h-10 p-1" />
+                              </FormControl>
+                              <Input 
+                                value={field.value} 
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="flex-1"
+                              />
+                            </div>
                             <FormDescription>
-                              Physical address displayed on the website
+                              Main brand color, used for buttons and accents
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -486,15 +559,22 @@ export default function AdminSettingsPage() {
 
                       <FormField
                         control={form.control}
-                        name="contact.mapEmbedUrl"
+                        name="general.secondaryColor"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Google Maps Embed URL</FormLabel>
-                            <FormControl>
-                              <Input {...field} />
-                            </FormControl>
+                            <FormLabel>Secondary Color</FormLabel>
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input type="color" {...field} className="w-12 h-10 p-1" />
+                              </FormControl>
+                              <Input 
+                                value={field.value} 
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="flex-1"
+                              />
+                            </div>
                             <FormDescription>
-                              URL for embedded Google Maps on the contact page
+                              Secondary color for backgrounds and sections
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -503,121 +583,308 @@ export default function AdminSettingsPage() {
 
                       <FormField
                         control={form.control}
-                        name="contact.contactFormEmail"
+                        name="general.accentColor"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Contact Form Email</FormLabel>
-                            <FormControl>
-                              <Input {...field} type="email" />
-                            </FormControl>
+                            <FormLabel>Accent Color</FormLabel>
+                            <div className="flex gap-2">
+                              <FormControl>
+                                <Input type="color" {...field} className="w-12 h-10 p-1" />
+                              </FormControl>
+                              <Input 
+                                value={field.value} 
+                                onChange={(e) => field.onChange(e.target.value)}
+                                className="flex-1"
+                              />
+                            </div>
                             <FormDescription>
-                              Email address where contact form submissions will be sent
+                              Accent color for highlights and special elements
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
                     </div>
-                  </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                  {/* Social Media Settings */}
-                  <TabsContent value="social" className="space-y-6">
-                    <div className="grid gap-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="social.facebook"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Facebook URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+              {/* Header Settings */}
+              <TabsContent value="header">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Header Settings</CardTitle>
+                    <CardDescription>
+                      Configure how your website header appears
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="header.showLogo"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Display Logo</FormLabel>
+                              <FormDescription>
+                                Show your logo in the header
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                        <FormField
-                          control={form.control}
-                          name="social.twitter"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Twitter URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                      <FormField
+                        control={form.control}
+                        name="header.showNav"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Show Navigation</FormLabel>
+                              <FormDescription>
+                                Display navigation menu in header
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="social.instagram"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Instagram URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={form.control}
+                        name="header.showCTA"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Show CTA Button</FormLabel>
+                              <FormDescription>
+                                Display call-to-action button
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                        <FormField
-                          control={form.control}
-                          name="social.linkedin"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>LinkedIn URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="header.ctaText"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CTA Button Text</FormLabel>
+                            <FormControl>
+                              <Input placeholder="Contact Us" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Text displayed on the call-to-action button
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
 
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <FormField
-                          control={form.control}
-                          name="social.youtube"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>YouTube URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                      <FormField
+                        control={form.control}
+                        name="header.ctaLink"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>CTA Button Link</FormLabel>
+                            <FormControl>
+                              <Input placeholder="/contact" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Where the button should link to
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
 
-                        <FormField
-                          control={form.control}
-                          name="social.pinterest"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Pinterest URL</FormLabel>
-                              <FormControl>
-                                <Input {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
+                    <div className="pt-6">
+                      <h3 className="text-lg font-semibold mb-4">Navigation Items</h3>
+                      <div className="space-y-4">
+                        {form.getValues().header.navItems.map((_, index) => (
+                          <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center border p-4 rounded-md">
+                            <div className="md:col-span-5">
+                              <FormField
+                                control={form.control}
+                                name={`header.navItems.${index}.text`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Menu Text</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="Home" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="md:col-span-5">
+                              <FormField
+                                control={form.control}
+                                name={`header.navItems.${index}.link`}
+                                render={({ field }) => (
+                                  <FormItem>
+                                    <FormLabel>Menu Link</FormLabel>
+                                    <FormControl>
+                                      <Input placeholder="/" {...field} />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                            <div className="md:col-span-2 flex items-end justify-center h-full pb-2">
+                              <FormField
+                                control={form.control}
+                                name={`header.navItems.${index}.visible`}
+                                render={({ field }) => (
+                                  <FormItem className="flex flex-row items-center space-x-2">
+                                    <FormLabel>Visible</FormLabel>
+                                    <FormControl>
+                                      <Switch
+                                        checked={field.value}
+                                        onCheckedChange={field.onChange}
+                                      />
+                                    </FormControl>
+                                    <FormMessage />
+                                  </FormItem>
+                                )}
+                              />
+                            </div>
+                          </div>
+                        ))}
                       </div>
                     </div>
-                  </TabsContent>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-                  {/* Footer Settings */}
-                  <TabsContent value="footer" className="space-y-6">
-                    <div className="grid gap-6">
+              {/* Footer Settings */}
+              <TabsContent value="footer">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Footer Settings</CardTitle>
+                    <CardDescription>
+                      Configure your website footer
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <FormField
+                      control={form.control}
+                      name="footer.showFooter"
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                          <div className="space-y-0.5">
+                            <FormLabel className="text-base font-semibold">Display Footer</FormLabel>
+                            <FormDescription>
+                              Show or hide the entire footer section
+                            </FormDescription>
+                          </div>
+                          <FormControl>
+                            <Switch
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+                      <FormField
+                        control={form.control}
+                        name="footer.showSocialIcons"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Social Icons</FormLabel>
+                              <FormDescription>
+                                Show social media icons
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="footer.showContactInfo"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Contact Info</FormLabel>
+                              <FormDescription>
+                                Show contact information
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="footer.showQuickLinks"
+                        render={({ field }) => (
+                          <FormItem className="flex flex-row items-center justify-between space-x-2 rounded-md border p-4">
+                            <div className="space-y-0.5">
+                              <FormLabel className="text-base font-semibold">Quick Links</FormLabel>
+                              <FormDescription>
+                                Show quick links columns
+                              </FormDescription>
+                            </div>
+                            <FormControl>
+                              <Switch
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                       <FormField
                         control={form.control}
                         name="footer.copyrightText"
@@ -625,10 +892,10 @@ export default function AdminSettingsPage() {
                           <FormItem>
                             <FormLabel>Copyright Text</FormLabel>
                             <FormControl>
-                              <Input {...field} />
+                              <Input placeholder="© 2025 Your Company. All rights reserved." {...field} />
                             </FormControl>
                             <FormDescription>
-                              Copyright text displayed in the footer
+                              Copyright notice displayed at the bottom
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -640,28 +907,312 @@ export default function AdminSettingsPage() {
                         name="footer.footerText"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Footer Text</FormLabel>
+                            <FormLabel>Footer Tagline</FormLabel>
                             <FormControl>
-                              <Textarea {...field} />
+                              <Input placeholder="Your company tagline or slogan" {...field} />
                             </FormControl>
                             <FormDescription>
-                              Additional text displayed in the footer
+                              Short text displayed in the footer
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+
+                    <div className="pt-6">
+                      <h3 className="text-lg font-semibold mb-4">Footer Columns</h3>
+                      <div className="space-y-8">
+                        {form.getValues().footer.columns.map((column, colIndex) => (
+                          <div key={colIndex} className="border p-4 rounded-md space-y-4">
+                            <FormField
+                              control={form.control}
+                              name={`footer.columns.${colIndex}.title`}
+                              render={({ field }) => (
+                                <FormItem>
+                                  <FormLabel>Column Title</FormLabel>
+                                  <FormControl>
+                                    <Input placeholder="Quick Links" {...field} />
+                                  </FormControl>
+                                  <FormMessage />
+                                </FormItem>
+                              )}
+                            />
+
+                            <h4 className="text-md font-medium mt-4 mb-2">Links in this column</h4>
+                            <div className="space-y-4">
+                              {column.links.map((_, linkIndex) => (
+                                <div key={linkIndex} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-3 rounded-md">
+                                  <FormField
+                                    control={form.control}
+                                    name={`footer.columns.${colIndex}.links.${linkIndex}.text`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Link Text</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="Home" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+
+                                  <FormField
+                                    control={form.control}
+                                    name={`footer.columns.${colIndex}.links.${linkIndex}.url`}
+                                    render={({ field }) => (
+                                      <FormItem>
+                                        <FormLabel>Link URL</FormLabel>
+                                        <FormControl>
+                                          <Input placeholder="/" {...field} />
+                                        </FormControl>
+                                        <FormMessage />
+                                      </FormItem>
+                                    )}
+                                  />
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Contact Info Settings */}
+              <TabsContent value="contact">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Contact Information</CardTitle>
+                    <CardDescription>
+                      Manage your contact details
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="contact.email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email Address</FormLabel>
+                            <FormControl>
+                              <Input placeholder="contact@example.com" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Primary contact email address
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
 
-                      {/* Footer Display Options */}
-                      {/* Additional settings for what sections to show in footer could be added here */}
+                      <FormField
+                        control={form.control}
+                        name="contact.phone"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Phone Number</FormLabel>
+                            <FormControl>
+                              <Input placeholder="+1 (555) 123-4567" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Business phone number
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
                     </div>
-                  </TabsContent>
-                </Tabs>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+
+                    <FormField
+                      control={form.control}
+                      name="contact.address"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Address</FormLabel>
+                          <FormControl>
+                            <Textarea
+                              placeholder="123 Main St, City, State 12345"
+                              className="resize-none"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Physical business address
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contact.mapEmbedUrl"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Google Maps Embed URL</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="https://www.google.com/maps/embed?..."
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            URL for embedding Google Maps on your contact page
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="contact.contactFormEmail"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Contact Form Recipient</FormLabel>
+                          <FormControl>
+                            <Input
+                              placeholder="inquiries@example.com"
+                              {...field}
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Email address where contact form submissions are sent
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </CardContent>
+                </Card>
+              </TabsContent>
+
+              {/* Social Media Settings */}
+              <TabsContent value="social">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Social Media Profiles</CardTitle>
+                    <CardDescription>
+                      Connect your social media accounts
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <FormField
+                        control={form.control}
+                        name="social.facebook"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Facebook</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://facebook.com/yourpage" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your Facebook page URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="social.twitter"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Twitter / X</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://twitter.com/youraccount" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your Twitter profile URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="social.instagram"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Instagram</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://instagram.com/youraccount" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your Instagram profile URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="social.linkedin"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>LinkedIn</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://linkedin.com/company/yourcompany" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your LinkedIn company page URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="social.youtube"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>YouTube</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://youtube.com/c/yourchannel" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your YouTube channel URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+
+                      <FormField
+                        control={form.control}
+                        name="social.pinterest"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Pinterest</FormLabel>
+                            <FormControl>
+                              <Input placeholder="https://pinterest.com/youraccount" {...field} />
+                            </FormControl>
+                            <FormDescription>
+                              Your Pinterest profile URL
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </form>
+        </Form>
       </div>
     </AdminLayout>
   );
-}
+};
+
+export default AdminSettingsPage;

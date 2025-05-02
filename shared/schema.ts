@@ -118,3 +118,15 @@ export const insertJobOpeningSchema = createInsertSchema(jobOpenings).omit({
 
 export type InsertJobOpening = z.infer<typeof insertJobOpeningSchema>;
 export type JobOpening = typeof jobOpenings.$inferSelect;
+
+// Settings table to store website settings as JSON
+export const settings = pgTable("settings", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(), // Store JSON as text
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertSettingsSchema = createInsertSchema(settings);
+export type InsertSettings = z.infer<typeof insertSettingsSchema>;
+export type Settings = typeof settings.$inferSelect;
