@@ -82,9 +82,11 @@ const ServicesPage: React.FC = () => {
                   <p className="text-gray-700 mb-4">
                     {service.description}
                   </p>
-                  <Button variant="link" className="p-0 text-primary font-medium">
-                    Learn More <ArrowRight className="h-5 w-5 ml-2" />
-                  </Button>
+                  <Link href={`/services/${service.slug}`}>
+                    <Button variant="link" className="p-0 text-primary font-medium">
+                      Learn More <ArrowRight className="h-5 w-5 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
               </motion.div>
             ))}

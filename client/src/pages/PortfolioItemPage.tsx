@@ -122,7 +122,7 @@ const PortfolioItemPage: React.FC = () => {
             >
               <div className="relative rounded-lg overflow-hidden shadow-2xl">
                 <img
-                  src={displayedItem.image}
+                  src={'imageUrl' in displayedItem ? displayedItem.imageUrl || '' : displayedItem.image}
                   alt={displayedItem.title}
                   className="w-full h-auto"
                 />
@@ -177,7 +177,7 @@ const PortfolioItemPage: React.FC = () => {
               <div className="space-y-6">
                 <div>
                   <h4 className="text-sm text-dark/60 uppercase mb-2">Client</h4>
-                  <p className="font-medium">{displayedItem.client || "Industry-Leading Business"}</p>
+                  <p className="font-medium">{"client" in displayedItem ? displayedItem.client : "Industry-Leading Business"}</p>
                 </div>
                 <div>
                   <h4 className="text-sm text-dark/60 uppercase mb-2">Industry</h4>
@@ -321,7 +321,7 @@ const PortfolioItemPage: React.FC = () => {
             </p>
             <div>
               <h4 className="font-bold font-montserrat">John Smith</h4>
-              <p className="text-dark/60">Marketing Director, {displayedItem.client || displayedItem.category + " Company"}</p>
+              <p className="text-dark/60">Marketing Director, {"client" in displayedItem ? displayedItem.client : displayedItem.category + " Company"}</p>
             </div>
           </motion.div>
         </div>

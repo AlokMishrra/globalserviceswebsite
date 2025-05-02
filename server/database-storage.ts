@@ -304,7 +304,7 @@ export class DatabaseStorage implements IStorage {
       // Try to update, if no rows affected then insert
       const updateResult = await db.execute(
         `UPDATE settings SET value = $1 WHERE key = 'global_settings' RETURNING *`,
-        { placeholders: [settingsJson] }
+        [settingsJson]
       );
       
       // Check if any rows were updated
@@ -312,7 +312,7 @@ export class DatabaseStorage implements IStorage {
         // No rows were updated, so insert new record
         await db.execute(
           `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
-          { placeholders: [settingsJson] }
+          [settingsJson]
         );
       }
       
