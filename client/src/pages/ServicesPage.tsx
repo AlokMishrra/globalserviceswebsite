@@ -260,9 +260,9 @@ const ServicesPage: React.FC = () => {
             transition={{ duration: 0.5, delay: 0.4 }}
           >
             <Link href="/contact">
-              <a className="inline-block bg-white text-primary hover:bg-gray-100 px-8 py-4 rounded-md font-bold transition-all transform hover:scale-105">
+              <span className="inline-block bg-white text-primary hover:bg-gray-100 px-8 py-4 rounded-md font-bold transition-all transform hover:scale-105">
                 Get Started
-              </a>
+              </span>
             </Link>
           </motion.div>
         </div>
