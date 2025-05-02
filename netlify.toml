@@ -6,12 +6,30 @@
   directory = "functions"
   node_bundler = "esbuild"
 
+# API routes
 [[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api/:splat"
   status = 200
 
+# Upload handler routes
+[[redirects]]
+  from = "/api/admin/upload"
+  to = "/.netlify/functions/upload-handler"
+  status = 200
+
+# Serve uploads directory
+[[redirects]]
+  from = "/uploads/*"
+  to = "/.netlify/functions/upload-handler/uploads/:splat"
+  status = 200
+
+# SPA fallback
 [[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Environment variables that should be set in Netlify dashboard
+[build.environment]
+  NODE_VERSION = "20.18.1"
