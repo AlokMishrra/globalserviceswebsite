@@ -3,7 +3,7 @@ services:
   - type: web
     name: globalservices-website
     env: node
-    buildCommand: npm ci && npm run render-build
+    buildCommand: npm install && node render-vite-build.js
     startCommand: npm start
     envVars:
       - key: NODE_ENV
