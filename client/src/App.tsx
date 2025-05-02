@@ -13,6 +13,7 @@ import AboutPage from "@/pages/AboutPage";
 import ServicesPage from "@/pages/ServicesPage";
 import ServiceDetailPage from "@/pages/ServiceDetailPage";
 import WorkPage from "@/pages/WorkPage";
+import PortfolioItemPage from "@/pages/PortfolioItemPage";
 import BlogPage from "@/pages/BlogPage";
 import BlogPostPage from "@/pages/BlogPostPage";
 import ContactPage from "@/pages/ContactPage";
@@ -60,6 +61,7 @@ function Router() {
           <Route path="/about" component={AboutPage} />
           <Route path="/services/:slug" component={ServiceDetailPage} />
           <Route path="/services" component={ServicesPage} />
+          <Route path="/work/:slug" component={PortfolioItemPage} />
           <Route path="/work" component={WorkPage} />
           <Route path="/blog/:slug" component={BlogPostPage} />
           <Route path="/blog" component={BlogPage} />
