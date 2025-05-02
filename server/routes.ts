@@ -8,11 +8,15 @@ import {
   insertPortfolioItemSchema, 
   insertBlogPostSchema, 
   insertJobOpeningSchema,
-  insertUserSchema
+  insertUserSchema,
+  insertTeamMemberSchema,
+  insertCompanyInfoSchema
 } from "@shared/schema";
 import { z } from "zod";
 import authRouter, { isAdmin, isAuthenticated } from "./auth";
 import uploadRouter from "./api/upload";
+import teamRouter from "./api/team";
+import companyInfoRouter from "./api/company-info";
 import session from "express-session";
 import MemoryStore from "memorystore";
 import path from "path";
@@ -492,6 +496,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: 'Failed to update settings' });
     }
   });
+
+  // Team Members public API
+  app.use('/api/team', teamRouter);
+
+  // Team Members admin API - routes already protected by isAdmin middleware
+  app.use('/api/admin/team', teamRouter);
+
+  // Company Info public API
+  app.use('/api/company-info', companyInfoRouter);
+
+  // Company Info admin API - routes already protected by isAdmin middleware
+  app.use('/api/admin/company-info', companyInfoRouter);
 
   const httpServer = createServer(app);
 

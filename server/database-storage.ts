@@ -312,10 +312,10 @@ export class DatabaseStorage implements IStorage {
       // Check if any rows were updated
       if (!updateResult.rows || updateResult.rows.length === 0) {
         // No rows were updated, so insert new record
-        await db.execute(
-          `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
-          [settingsJson]
-        );
+        await db.execute({
+          query: `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
+          args: [settingsJson]
+        });
       }
       
       return settings;
