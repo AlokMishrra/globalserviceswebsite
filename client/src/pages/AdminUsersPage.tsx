@@ -209,10 +209,18 @@ export default function AdminUsersPage() {
     if (isEditMode && selectedUser) {
       // If editing, exclude password if it's empty (unchanged)
       const updateData = { ...data };
-      if (!updateData.password || updateData.password.trim() === "") {
-        delete updateData.password;
-      }
-      updateUserMutation.mutate({ id: selectedUser.id, data: updateData });
+      const finalData = updateData.password && updateData.password.trim() !== "" 
+        ? updateData 
+        : { 
+            username: updateData.username,
+            email: updateData.email,
+            role: updateData.role,
+            firstName: updateData.firstName,
+            lastName: updateData.lastName,
+            permissions: updateData.permissions
+          };
+          
+      updateUserMutation.mutate({ id: selectedUser.id, data: finalData });
     } else {
       createUserMutation.mutate(data);
     }

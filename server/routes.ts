@@ -6,7 +6,8 @@ import {
   insertServiceSchema, 
   insertPortfolioItemSchema, 
   insertBlogPostSchema, 
-  insertJobOpeningSchema
+  insertJobOpeningSchema,
+  insertUserSchema
 } from "@shared/schema";
 import { z } from "zod";
 import authRouter, { isAdmin, isAuthenticated } from "./auth";

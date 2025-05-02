@@ -77,7 +77,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         </div>
         <ScrollArea className="flex-1">
           <nav className="flex flex-col gap-1 p-4">
-            <p className="text-xs font-medium text-muted-foreground p-2">Management</p>
+            <p className="text-xs font-medium text-muted-foreground p-2">Content Management</p>
             <AdminNavItem 
               href="/admin/services" 
               title="Services" 
@@ -102,6 +102,13 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               href="/admin/contact" 
               title="Contact Submissions" 
               isActive={location === "/admin/contact"} 
+            />
+            
+            <p className="text-xs font-medium text-muted-foreground p-2 mt-4">Administration</p>
+            <AdminNavItem 
+              href="/admin/users" 
+              title="Users" 
+              isActive={location === "/admin/users"} 
             />
             <div className="mt-auto pt-4 border-t">
               <button
@@ -132,6 +139,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
         {mobileNavOpen && (
           <div className="fixed inset-0 top-16 z-50 bg-background md:hidden">
             <nav className="grid gap-2 p-4">
+              <p className="text-xs font-medium text-muted-foreground p-2">Content Management</p>
               <AdminNavItem 
                 href="/admin/services" 
                 title="Services" 
@@ -162,13 +170,24 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 isActive={location === "/admin/contact"} 
                 onClick={() => setMobileNavOpen(false)}
               />
-              <button
-                onClick={handleLogout}
-                className="flex items-center justify-center px-4 py-3 text-sm font-medium rounded-md hover:bg-destructive/10 text-destructive transition-colors"
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Logout
-              </button>
+              
+              <p className="text-xs font-medium text-muted-foreground p-2 mt-4">Administration</p>
+              <AdminNavItem 
+                href="/admin/users" 
+                title="Users" 
+                isActive={location === "/admin/users"} 
+                onClick={() => setMobileNavOpen(false)}
+              />
+              
+              <div className="mt-4 pt-4 border-t">
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium rounded-md hover:bg-destructive/10 text-destructive transition-colors"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Logout
+                </button>
+              </div>
             </nav>
           </div>
         )}

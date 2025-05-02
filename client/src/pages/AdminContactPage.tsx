@@ -100,7 +100,7 @@ export default function AdminContactPage() {
   };
 
   // Format date
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return format(new Date(dateString), "MMM dd, yyyy 'at' h:mm a");
   };
 

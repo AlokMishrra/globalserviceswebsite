@@ -21,6 +21,11 @@ import NotFound from "@/pages/not-found";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import AdminDashboardPage from "@/pages/AdminDashboardPage";
 import AdminServicesPage from "@/pages/AdminServicesPage";
+import AdminPortfolioPage from "@/pages/AdminPortfolioPage";
+import AdminBlogPage from "@/pages/AdminBlogPage";
+import AdminJobsPage from "@/pages/AdminJobsPage";
+import AdminContactPage from "@/pages/AdminContactPage";
+import AdminUsersPage from "@/pages/AdminUsersPage";
 
 function Router() {
   const [location] = useLocation();
@@ -32,7 +37,11 @@ function Router() {
         <Route path="/admin/login" component={AdminLoginPage} />
         <Route path="/admin" component={AdminDashboardPage} />
         <Route path="/admin/services" component={AdminServicesPage} />
-        {/* We'll add more admin routes as needed */}
+        <Route path="/admin/portfolio" component={AdminPortfolioPage} />
+        <Route path="/admin/blog" component={AdminBlogPage} />
+        <Route path="/admin/jobs" component={AdminJobsPage} />
+        <Route path="/admin/contact" component={AdminContactPage} />
+        <Route path="/admin/users" component={AdminUsersPage} />
         <Route component={NotFound} />
       </Switch>
     );
