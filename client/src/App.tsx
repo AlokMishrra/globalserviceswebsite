@@ -11,8 +11,10 @@ import Footer from "@/components/layout/Footer";
 import HomePage from "@/pages/HomePage";
 import AboutPage from "@/pages/AboutPage";
 import ServicesPage from "@/pages/ServicesPage";
+import ServiceDetailPage from "@/pages/ServiceDetailPage";
 import WorkPage from "@/pages/WorkPage";
 import BlogPage from "@/pages/BlogPage";
+import BlogPostPage from "@/pages/BlogPostPage";
 import ContactPage from "@/pages/ContactPage";
 import CareersPage from "@/pages/CareersPage";
 import NotFound from "@/pages/not-found";
@@ -26,6 +28,7 @@ import AdminBlogPage from "@/pages/AdminBlogPage";
 import AdminJobsPage from "@/pages/AdminJobsPage";
 import AdminContactPage from "@/pages/AdminContactPage";
 import AdminUsersPage from "@/pages/AdminUsersPage";
+import AdminSettingsPage from "@/pages/AdminSettingsPage";
 
 function Router() {
   const [location] = useLocation();
@@ -42,6 +45,7 @@ function Router() {
         <Route path="/admin/jobs" component={AdminJobsPage} />
         <Route path="/admin/contact" component={AdminContactPage} />
         <Route path="/admin/users" component={AdminUsersPage} />
+        <Route path="/admin/settings" component={AdminSettingsPage} />
         <Route component={NotFound} />
       </Switch>
     );
@@ -54,8 +58,10 @@ function Router() {
         <Switch>
           <Route path="/" component={HomePage} />
           <Route path="/about" component={AboutPage} />
+          <Route path="/services/:slug" component={ServiceDetailPage} />
           <Route path="/services" component={ServicesPage} />
           <Route path="/work" component={WorkPage} />
+          <Route path="/blog/:slug" component={BlogPostPage} />
           <Route path="/blog" component={BlogPage} />
           <Route path="/contact" component={ContactPage} />
           <Route path="/careers" component={CareersPage} />
