@@ -100,3 +100,14 @@ app.use((req, res, next) => {
     log(`serving on port ${port}`);
   });
 })();
+
+// Start the server if this file is executed directly (not imported by Vercel)
+const PORT = process.env.PORT || 3000;
+
+if (process.env.VERCEL !== "1") {
+  app.listen(PORT, () => {
+    console.log(`🚀 Server started on http://localhost:${PORT}`);
+  });
+}
+
+export default app;
