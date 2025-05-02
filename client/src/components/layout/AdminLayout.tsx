@@ -102,6 +102,16 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               title="Contact Submissions" 
               isActive={location === "/admin/contact"} 
             />
+            <AdminNavItem 
+              href="/admin/team" 
+              title="Team Members" 
+              isActive={location === "/admin/team"} 
+            />
+            <AdminNavItem 
+              href="/admin/company-info" 
+              title="Company Info" 
+              isActive={location === "/admin/company-info"} 
+            />
             
             <p className="text-xs font-medium text-muted-foreground p-2 mt-4">Administration</p>
             <AdminNavItem 
@@ -172,6 +182,18 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 href="/admin/contact" 
                 title="Contact Submissions" 
                 isActive={location === "/admin/contact"} 
+                onClick={() => setMobileNavOpen(false)}
+              />
+              <AdminNavItem 
+                href="/admin/team" 
+                title="Team Members" 
+                isActive={location === "/admin/team"} 
+                onClick={() => setMobileNavOpen(false)}
+              />
+              <AdminNavItem 
+                href="/admin/company-info" 
+                title="Company Info" 
+                isActive={location === "/admin/company-info"} 
                 onClick={() => setMobileNavOpen(false)}
               />
               

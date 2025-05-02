@@ -74,11 +74,7 @@ const AdminCompanyInfoPage: React.FC = () => {
 
   // Query to fetch company info
   const { data: companyInfo = [], isLoading, error } = useQuery<CompanyInfo[]>({
-    queryKey: ['/api/admin/company-info'], 
-    queryFn: async () => {
-      const response = await apiRequest('GET', '/api/admin/company-info');
-      return await response.json();
-    }
+    queryKey: ['/api/admin/company-info']
   });
 
   // Filtered company info based on active filter
@@ -89,7 +85,10 @@ const AdminCompanyInfoPage: React.FC = () => {
   // Mutation to create company info
   const createMutation = useMutation({
     mutationFn: async (data: CompanyInfoFormValues) => {
-      const response = await apiRequest('POST', '/api/admin/company-info', data);
+      const response = await apiRequest('/api/admin/company-info', {
+        method: 'POST',
+        body: JSON.stringify(data)
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -113,7 +112,10 @@ const AdminCompanyInfoPage: React.FC = () => {
   // Mutation to update company info
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: number; data: CompanyInfoFormValues }) => {
-      const response = await apiRequest('PUT', `/api/admin/company-info/${id}`, data);
+      const response = await apiRequest(`/api/admin/company-info/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data)
+      });
       return await response.json();
     },
     onSuccess: () => {
@@ -136,7 +138,9 @@ const AdminCompanyInfoPage: React.FC = () => {
   // Mutation to delete company info
   const deleteMutation = useMutation({
     mutationFn: async (id: number) => {
-      await apiRequest('DELETE', `/api/admin/company-info/${id}`);
+      await apiRequest(`/api/admin/company-info/${id}`, {
+        method: 'DELETE'
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/company-info'] });
