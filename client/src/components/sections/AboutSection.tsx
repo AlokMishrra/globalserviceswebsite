@@ -87,7 +87,7 @@ const AboutSection: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
+            {features.map((feature: { icon: React.ReactNode, title: string, description: string }, index: number) => (
               <motion.div 
                 key={index}
                 className="bg-white p-8 rounded-lg shadow-md hover:shadow-xl transition-shadow"

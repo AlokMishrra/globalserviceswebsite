@@ -6,6 +6,7 @@ import ServicesSection from "@/components/sections/ServicesSection";
 import IntegratedSolutionsSection from "@/components/sections/IntegratedSolutionsSection";
 import OurWorkSection from "@/components/sections/OurWorkSection";
 import StrategySection from "@/components/sections/StrategySection";
+import TeamSection from "@/components/sections/TeamSection";
 import BlogSection from "@/components/sections/BlogSection";
 import ContactSection from "@/components/sections/ContactSection";
 import CareersSection from "@/components/sections/CareersSection";
@@ -26,6 +27,7 @@ const HomePage: React.FC = () => {
       <IntegratedSolutionsSection />
       <OurWorkSection />
       <StrategySection />
+      <TeamSection />
       <BlogSection />
       <ContactSection />
       <CareersSection />
