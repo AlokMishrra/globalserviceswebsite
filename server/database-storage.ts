@@ -195,4 +195,131 @@ export class DatabaseStorage implements IStorage {
     await db.delete(jobOpenings).where(eq(jobOpenings.id, id));
     return true;
   }
+
+  // Settings methods
+  async getSettings(): Promise<any> {
+    // In production, you would retrieve settings from a settings table in the database
+    // For now, we'll use a simple approach
+    try {
+      // Try to read from a specific query
+      const result = await db.execute(
+        `SELECT value FROM settings WHERE key = 'global_settings'`
+      );
+      
+      // Check if there are any results
+      const rows = result.rows;
+      if (rows && rows.length > 0 && rows[0].value) {
+        return JSON.parse(rows[0].value as string);
+      }
+      
+      // If no settings exist, return default settings
+      return {
+        general: {
+          siteName: "Global Services",
+          siteTagline: "Digital Marketing Agency",
+          siteDescription: "Full-scale Digital Marketing Agency creating innovative solutions",
+          logoUrl: "",
+          faviconUrl: "",
+          primaryColor: "#10B981",
+          secondaryColor: "#F3F4F6",
+          accentColor: "#FFC107",
+        },
+        contact: {
+          email: "contact@example.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Main St, New York, NY 10001",
+          mapEmbedUrl: "",
+          contactFormEmail: "contact@example.com",
+        },
+        social: {
+          facebook: "https://facebook.com/globalservices",
+          twitter: "https://twitter.com/globalservices",
+          instagram: "https://instagram.com/globalservices",
+          linkedin: "https://linkedin.com/company/globalservices",
+          youtube: "",
+          pinterest: "",
+        },
+        footer: {
+          copyrightText: "© 2025 Global Services. All rights reserved.",
+          footerText: "Strategy. Creativity. Results.",
+          showSocialIcons: true,
+          showContactInfo: true,
+          showQuickLinks: true,
+        }
+      };
+    } catch (error) {
+      console.error("Error fetching settings:", error);
+      
+      // Return default settings in case of error
+      return {
+        general: {
+          siteName: "Global Services",
+          siteTagline: "Digital Marketing Agency",
+          siteDescription: "Full-scale Digital Marketing Agency creating innovative solutions",
+          logoUrl: "",
+          faviconUrl: "",
+          primaryColor: "#10B981",
+          secondaryColor: "#F3F4F6",
+          accentColor: "#FFC107",
+        },
+        contact: {
+          email: "contact@example.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Main St, New York, NY 10001",
+          mapEmbedUrl: "",
+          contactFormEmail: "contact@example.com",
+        },
+        social: {
+          facebook: "https://facebook.com/globalservices",
+          twitter: "https://twitter.com/globalservices",
+          instagram: "https://instagram.com/globalservices",
+          linkedin: "https://linkedin.com/company/globalservices",
+          youtube: "",
+          pinterest: "",
+        },
+        footer: {
+          copyrightText: "© 2025 Global Services. All rights reserved.",
+          footerText: "Strategy. Creativity. Results.",
+          showSocialIcons: true,
+          showContactInfo: true,
+          showQuickLinks: true,
+        }
+      };
+    }
+  }
+
+  async updateSettings(settings: any): Promise<any> {
+    try {
+      // Check if settings table exists, if not create it
+      await db.execute(`
+        CREATE TABLE IF NOT EXISTS settings (
+          key TEXT PRIMARY KEY,
+          value TEXT NOT NULL
+        )
+      `);
+      
+      // Convert settings to JSON string
+      const settingsJson = JSON.stringify(settings);
+      
+      // Try to update, if no rows affected then insert
+      const updateResult = await db.execute(
+        `UPDATE settings SET value = $1 WHERE key = 'global_settings' RETURNING *`,
+        { placeholders: [settingsJson] }
+      );
+      
+      // Check if any rows were updated
+      if (!updateResult.rows || updateResult.rows.length === 0) {
+        // No rows were updated, so insert new record
+        await db.execute(
+          `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
+          { placeholders: [settingsJson] }
+        );
+      }
+      
+      return settings;
+    } catch (error) {
+      console.error("Error updating settings:", error);
+      throw error;
+    }
+  }
 }

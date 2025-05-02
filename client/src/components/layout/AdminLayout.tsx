@@ -109,6 +109,11 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
               title="Users" 
               isActive={location === "/admin/users"} 
             />
+            <AdminNavItem 
+              href="/admin/settings" 
+              title="Website Settings" 
+              isActive={location === "/admin/settings"} 
+            />
             <div className="mt-auto pt-4 border-t">
               <button
                 onClick={handleLogout}
@@ -175,6 +180,12 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
                 href="/admin/users" 
                 title="Users" 
                 isActive={location === "/admin/users"} 
+                onClick={() => setMobileNavOpen(false)}
+              />
+              <AdminNavItem 
+                href="/admin/settings" 
+                title="Website Settings" 
+                isActive={location === "/admin/settings"} 
                 onClick={() => setMobileNavOpen(false)}
               />
               

@@ -444,6 +444,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Website Settings Management
+  
+  // Get website settings
+  app.get('/api/admin/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getSettings();
+      res.json(settings);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to fetch settings' });
+    }
+  });
+  
+  // Update website settings
+  app.post('/api/admin/settings', isAdmin, async (req, res) => {
+    try {
+      const settings = req.body;
+      
+      // Validate general section
+      if (settings.general && !settings.general.siteName) {
+        return res.status(400).json({ message: 'Site name is required' });
+      }
+      
+      // Validate contact section
+      if (settings.contact) {
+        if (settings.contact.email && !settings.contact.email.includes('@')) {
+          return res.status(400).json({ message: 'Invalid email address' });
+        }
+        if (settings.contact.contactFormEmail && !settings.contact.contactFormEmail.includes('@')) {
+          return res.status(400).json({ message: 'Invalid contact form email address' });
+        }
+      }
+      
+      const updatedSettings = await storage.updateSettings(settings);
+      res.json(updatedSettings);
+    } catch (error) {
+      res.status(500).json({ message: 'Failed to update settings' });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;
