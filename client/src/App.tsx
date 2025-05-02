@@ -30,6 +30,8 @@ import AdminJobsPage from "@/pages/AdminJobsPage";
 import AdminContactPage from "@/pages/AdminContactPage";
 import AdminUsersPage from "@/pages/AdminUsersPage";
 import AdminSettingsPage from "@/pages/AdminSettingsPage";
+import AdminTeamPage from "@/pages/AdminTeamPage";
+import AdminCompanyInfoPage from "@/pages/AdminCompanyInfoPage";
 
 function Router() {
   const [location] = useLocation();
@@ -46,6 +48,8 @@ function Router() {
         <Route path="/admin/jobs" component={AdminJobsPage} />
         <Route path="/admin/contact" component={AdminContactPage} />
         <Route path="/admin/users" component={AdminUsersPage} />
+        <Route path="/admin/team" component={AdminTeamPage} />
+        <Route path="/admin/company-info" component={AdminCompanyInfoPage} />
         <Route path="/admin/settings" component={AdminSettingsPage} />
         <Route component={NotFound} />
       </Switch>

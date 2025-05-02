@@ -10,7 +10,7 @@ import {
   companyInfo, type CompanyInfo, type InsertCompanyInfo
 } from "@shared/schema";
 import { IStorage } from "./storage";
-import { db } from "./db";
+import { db, pool } from "./db";
 
 export class DatabaseStorage implements IStorage {
   // User methods
@@ -204,7 +204,7 @@ export class DatabaseStorage implements IStorage {
     // For now, we'll use a simple approach
     try {
       // Try to read from a specific query
-      const result = await db.execute(
+      const result = await pool.query(
         `SELECT value FROM settings WHERE key = 'global_settings'`
       );
       
@@ -293,7 +293,7 @@ export class DatabaseStorage implements IStorage {
   async updateSettings(settings: any): Promise<any> {
     try {
       // Check if settings table exists, if not create it
-      await db.execute(`
+      await pool.query(`
         CREATE TABLE IF NOT EXISTS settings (
           key TEXT PRIMARY KEY,
           value TEXT NOT NULL
@@ -304,7 +304,7 @@ export class DatabaseStorage implements IStorage {
       const settingsJson = JSON.stringify(settings);
       
       // Try to update, if no rows affected then insert
-      const updateResult = await db.execute(
+      const updateResult = await pool.query(
         `UPDATE settings SET value = $1 WHERE key = 'global_settings' RETURNING *`,
         [settingsJson]
       );
@@ -312,10 +312,10 @@ export class DatabaseStorage implements IStorage {
       // Check if any rows were updated
       if (!updateResult.rows || updateResult.rows.length === 0) {
         // No rows were updated, so insert new record
-        await db.execute({
-          query: `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
-          args: [settingsJson]
-        });
+        await pool.query(
+          `INSERT INTO settings (key, value) VALUES ('global_settings', $1)`,
+          [settingsJson]
+        );
       }
       
       return settings;
