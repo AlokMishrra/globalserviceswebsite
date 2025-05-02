@@ -21,19 +21,18 @@ interface AdminNavItemProps {
 
 function AdminNavItem({ href, title, isActive, isMobile, onClick }: AdminNavItemProps) {
   return (
-    <Link href={href}>
-      <a
-        className={cn(
-          "flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-muted hover:text-foreground transition-colors",
-          isActive
-            ? "bg-accent text-accent-foreground"
-            : "text-muted-foreground",
-          isMobile && "justify-center"
-        )}
-        onClick={onClick}
-      >
-        {title}
-      </a>
+    <Link 
+      href={href}
+      className={cn(
+        "flex items-center px-4 py-3 text-sm font-medium rounded-md hover:bg-muted hover:text-foreground transition-colors",
+        isActive
+          ? "bg-accent text-accent-foreground"
+          : "text-muted-foreground",
+        isMobile && "justify-center"
+      )}
+      onClick={onClick}
+    >
+      {title}
     </Link>
   );
 }
@@ -71,8 +70,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
       {/* Sidebar for desktop */}
       <aside className="hidden md:flex w-64 flex-col border-r">
         <div className="px-6 py-6 flex items-center justify-between border-b">
-          <Link href="/admin">
-            <a className="font-bold text-lg">Admin Dashboard</a>
+          <Link href="/admin" className="font-bold text-lg">
+            Admin Dashboard
           </Link>
         </div>
         <ScrollArea className="flex-1">
