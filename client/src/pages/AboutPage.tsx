@@ -1,9 +1,22 @@
 import React from "react";
 import { motion } from "framer-motion";
 import { Helmet } from "react-helmet";
-import { teamMembers } from "@/lib/data";
+import { useQuery } from "@tanstack/react-query";
+import { Loader2 } from "lucide-react";
+import { Link } from "wouter";
 
 const AboutPage: React.FC = () => {
+  // Fetch team members from API
+  const { data: teamMembers, isLoading, error } = useQuery({
+    queryKey: ['/api/team'],
+    queryFn: async () => {
+      const response = await fetch('/api/team');
+      if (!response.ok) {
+        throw new Error('Failed to fetch team members');
+      }
+      return await response.json();
+    }
+  });
   return (
     <>
       <Helmet>
@@ -154,31 +167,48 @@ const AboutPage: React.FC = () => {
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {teamMembers.map((member, index) => (
-              <motion.div 
-                key={member.id}
-                className="bg-light rounded-lg overflow-hidden shadow-md"
-                initial={{ opacity: 0, y: 50 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <div className="h-64 overflow-hidden">
-                  <img 
-                    src={member.image} 
-                    alt={member.name} 
-                    className="w-full h-full object-cover" 
-                  />
-                </div>
-                <div className="p-6">
-                  <h3 className="text-xl font-bold font-montserrat mb-1">{member.name}</h3>
-                  <p className="text-primary font-medium mb-3">{member.position}</p>
-                  <p className="text-gray-700">{member.bio}</p>
-                </div>
-              </motion.div>
-            ))}
-          </div>
+          {isLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+          ) : error ? (
+            <div className="text-center py-12">
+              <p className="text-red-500 mb-4">Failed to load team members. Please try again later.</p>
+              <button onClick={() => window.location.reload()} className="px-4 py-2 bg-primary text-white rounded-md">
+                Retry
+              </button>
+            </div>
+          ) : teamMembers && teamMembers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {teamMembers.map((member: any, index: number) => (
+                <motion.div 
+                  key={member.id}
+                  className="bg-light rounded-lg overflow-hidden shadow-md"
+                  initial={{ opacity: 0, y: 50 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <div className="h-64 overflow-hidden">
+                    <img 
+                      src={member.imageUrl || "https://images.unsplash.com/photo-1568602471122-7832951cc4c5?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80"} 
+                      alt={member.name} 
+                      className="w-full h-full object-cover" 
+                    />
+                  </div>
+                  <div className="p-6">
+                    <h3 className="text-xl font-bold font-montserrat mb-1">{member.name}</h3>
+                    <p className="text-primary font-medium mb-3">{member.position}</p>
+                    <p className="text-gray-700">{member.bio}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-12">
+              <p className="text-gray-500">No team members found. Please check back later.</p>
+            </div>
+          )}
         </div>
       </section>
 
@@ -209,9 +239,11 @@ const AboutPage: React.FC = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.4 }}
           >
-            <a href="/contact" className="inline-block bg-white text-primary hover:bg-gray-100 px-8 py-4 rounded-md font-bold transition-all transform hover:scale-105">
-              Get in Touch
-            </a>
+            <Link href="/contact">
+              <span className="inline-block bg-white text-primary hover:bg-gray-100 px-8 py-4 rounded-md font-bold transition-all transform hover:scale-105">
+                Get in Touch
+              </span>
+            </Link>
           </motion.div>
         </div>
       </section>
