@@ -726,7 +726,7 @@ const AdminSettingsPage: React.FC = () => {
                     <div className="pt-6">
                       <h3 className="text-lg font-semibold mb-4">Navigation Items</h3>
                       <div className="space-y-4">
-                        {form.getValues().header.navItems.map((_, index) => (
+                        {form.getValues().header?.navItems?.map((_, index) => (
                           <div key={index} className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center border p-4 rounded-md">
                             <div className="md:col-span-5">
                               <FormField
@@ -923,7 +923,7 @@ const AdminSettingsPage: React.FC = () => {
                     <div className="pt-6">
                       <h3 className="text-lg font-semibold mb-4">Footer Columns</h3>
                       <div className="space-y-8">
-                        {form.getValues().footer.columns.map((column, colIndex) => (
+                        {form.getValues().footer?.columns?.map((column, colIndex) => (
                           <div key={colIndex} className="border p-4 rounded-md space-y-4">
                             <FormField
                               control={form.control}
@@ -941,7 +941,7 @@ const AdminSettingsPage: React.FC = () => {
 
                             <h4 className="text-md font-medium mt-4 mb-2">Links in this column</h4>
                             <div className="space-y-4">
-                              {column.links.map((_, linkIndex) => (
+                              {column.links?.map((_, linkIndex) => (
                                 <div key={linkIndex} className="grid grid-cols-1 md:grid-cols-2 gap-4 border p-3 rounded-md">
                                   <FormField
                                     control={form.control}

@@ -16,6 +16,7 @@ import { Switch } from '@/components/ui/switch';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+import ImageUploader from '@/components/ImageUploader';
 
 interface TeamMember {
   id: number;
