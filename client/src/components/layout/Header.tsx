@@ -12,14 +12,14 @@ const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [location] = useLocation();
 
-  // Fetch website settings
+  // Fetch website settings from public API endpoint
   const { data: settings } = useQuery<any>({
-    queryKey: ['/api/admin/settings'],
+    queryKey: ['/api/settings'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/admin/settings');
+        const response = await fetch('/api/settings');
         if (!response.ok) {
-          // If we can't get admin settings, fallback to defaults
+          // If we can't get settings, fallback to defaults
           return {
             general: { siteName: 'Global Services' },
             header: {
