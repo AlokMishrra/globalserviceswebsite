@@ -348,6 +348,5 @@ import { DatabaseStorage } from "./database-storage";
 
 // Use DatabaseStorage for production environment
 // and MemStorage for development environment when needed
-export const storage = process.env.NODE_ENV === "production" 
-  ? new DatabaseStorage() 
-  : new MemStorage();
+// Always use DatabaseStorage for this project
+export const storage = new DatabaseStorage();
