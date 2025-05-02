@@ -1,5 +1,11 @@
 import { QueryClient, QueryFunction } from "@tanstack/react-query";
 
+// API Base URL - automatically detects environment
+export const API_BASE_URL = 
+  import.meta.env.MODE === 'production' 
+    ? '/.netlify/functions/api' 
+    : '';
+
 async function throwIfResNotOk(res: Response) {
   if (!res.ok) {
     const text = (await res.text()) || res.statusText;
@@ -37,7 +43,10 @@ export async function apiRequest(
     }
   }
 
-  const res = await fetch(endpoint, {
+  // Use API_BASE_URL for both development and production
+  const url = `${API_BASE_URL}${endpoint}`;
+  
+  const res = await fetch(url, {
     credentials: "include",
     headers: {
       "Content-Type": "application/json",
@@ -54,7 +63,10 @@ export const getQueryFn: <T>(options: {
 }) => QueryFunction<T> =
   ({ on401: unauthorizedBehavior }) =>
   async ({ queryKey }) => {
-    const res = await fetch(queryKey[0] as string, {
+    const endpoint = queryKey[0] as string;
+    const url = `${API_BASE_URL}${endpoint}`;
+    
+    const res = await fetch(url, {
       credentials: "include",
     });
 
