@@ -1,0 +1,13 @@
+{
+  "name": "globalservices-website-render",
+  "version": "1.0.0",
+  "type": "module",
+  "license": "MIT",
+  "dependencies": {
+    "vite": "^5.0.10",
+    "@vitejs/plugin-react": "^4.2.1",
+    "esbuild": "^0.19.11",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}
