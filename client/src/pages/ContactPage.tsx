@@ -6,7 +6,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 import {
   Form,
@@ -39,8 +39,76 @@ const contactFormSchema = z.object({
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
+// Define the Settings interface to match the admin settings structure
+interface Settings {
+  general: {
+    siteName: string;
+    siteTagline: string;
+    siteDescription: string;
+    logoUrl: string;
+    faviconUrl: string;
+    primaryColor: string;
+    secondaryColor: string;
+    accentColor: string;
+  };
+  header: {
+    showLogo: boolean;
+    showNav: boolean;
+    showCTA: boolean;
+    ctaText: string;
+    ctaLink: string;
+    navItems: Array<{
+      text: string;
+      link: string;
+      visible: boolean;
+    }>;
+  };
+  footer: {
+    showFooter: boolean;
+    copyrightText: string;
+    footerText: string;
+    showSocialIcons: boolean;
+    showContactInfo: boolean;
+    showQuickLinks: boolean;
+    columns: Array<{
+      title: string;
+      links: Array<{
+        text: string;
+        url: string;
+      }>;
+    }>;
+  };
+  contact: {
+    email: string;
+    phone: string;
+    address: string;
+    mapEmbedUrl: string;
+    contactFormEmail: string;
+  };
+  social: {
+    facebook: string;
+    twitter: string;
+    instagram: string;
+    linkedin: string;
+    youtube: string;
+    pinterest: string;
+  };
+}
+
 const ContactPage: React.FC = () => {
   const { toast } = useToast();
+  
+  // Fetch website settings including contact information
+  const { data: settings, isLoading: settingsLoading } = useQuery<Settings>({
+    queryKey: ['/api/settings'],
+    queryFn: async () => {
+      const response = await apiRequest('/api/settings');
+      if (!response.ok) {
+        throw new Error('Failed to fetch settings');
+      }
+      return response.json();
+    },
+  });
   
   const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
@@ -239,7 +307,7 @@ const ContactPage: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-medium mb-1">Office Location</h4>
-                      <p className="text-gray-700">123 Business Avenue, Suite 500<br />New Delhi, India 110001</p>
+                      <p className="text-gray-700">{settings?.contact?.address || "123 Business Avenue, Suite 500\nNew Delhi, India 110001"}</p>
                     </div>
                   </div>
                   
@@ -249,7 +317,7 @@ const ContactPage: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-medium mb-1">Phone Number</h4>
-                      <p className="text-gray-700">+91 98765 43210</p>
+                      <p className="text-gray-700">{settings?.contact?.phone || "+91 98765 43210"}</p>
                     </div>
                   </div>
                   
@@ -259,7 +327,7 @@ const ContactPage: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-medium mb-1">Email Address</h4>
-                      <p className="text-gray-700">info@globalservices.com</p>
+                      <p className="text-gray-700">{settings?.contact?.email || "info@globalservices.com"}</p>
                     </div>
                   </div>
                   
@@ -294,7 +362,7 @@ const ContactPage: React.FC = () => {
                 
                 <div className="relative h-60 md:h-80 rounded-lg overflow-hidden">
                   <iframe 
-                    src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d448196.0539680236!2d76.76357827622207!3d28.64368446246649!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1658840301691!5m2!1sen!2sin" 
+                    src={settings?.contact?.mapEmbedUrl || "https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d448196.0539680236!2d76.76357827622207!3d28.64368446246649!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x390cfd5b347eb62d%3A0x37205b715389640!2sNew%20Delhi%2C%20Delhi!5e0!3m2!1sen!2sin!4v1658840301691!5m2!1sen!2sin"}
                     width="100%" 
                     height="100%" 
                     style={{ border: 0 }} 
