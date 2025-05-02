@@ -22,12 +22,27 @@ import MemoryStore from "memorystore";
 import path from "path";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Enable CORS with credentials
+  app.use(express.json());
+  app.use(function(req, res, next) {
+    res.header('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.header('Access-Control-Allow-Credentials', 'true');
+    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    next();
+  });
+  
   // Setup session middleware
   const MemoryStoreSession = MemoryStore(session);
   app.use(
     session({
       name: "global-services-session",
-      cookie: { maxAge: 86400000, secure: false }, // 24 hours
+      cookie: { 
+        maxAge: 86400000, // 24 hours
+        secure: false,
+        httpOnly: true,
+        sameSite: 'lax'
+      },
       store: new MemoryStoreSession({
         checkPeriod: 86400000 // 24 hours
       }),

@@ -76,13 +76,28 @@ router.post("/login", async (req: Request, res: Response) => {
 
     // Set the user in the session
     if (req.session) {
+      console.log("Setting session data for user:", user.username);
       req.session.userId = user.id;
       req.session.userRole = user.role;
+      
+      // Save the session explicitly to ensure it's stored before responding
+      req.session.save((err) => {
+        if (err) {
+          console.error("Error saving session:", err);
+          return res.status(500).json({ error: "Failed to save session" });
+        }
+        
+        // Don't send the password in the response
+        const { password: _, ...userWithoutPassword } = user;
+        console.log("Login successful. Session data:", req.session);
+        res.status(200).json(userWithoutPassword);
+      });
+    } else {
+      // Don't send the password in the response
+      const { password: _, ...userWithoutPassword } = user;
+      console.log("Warning: No session object available");
+      res.status(200).json(userWithoutPassword);
     }
-
-    // Don't send the password in the response
-    const { password: _, ...userWithoutPassword } = user;
-    res.status(200).json(userWithoutPassword);
   } catch (error) {
     if (error instanceof z.ZodError) {
       return res.status(400).json({ error: error.errors });
@@ -115,15 +130,27 @@ router.get("/me", async (req: Request, res: Response) => {
 
 // Logout endpoint
 router.post("/logout", (req: Request, res: Response) => {
+  console.log("Logout requested, session:", req.session);
+  
   if (req.session) {
+    // Clear session data
+    req.session.userId = undefined;
+    req.session.userRole = undefined;
+    
     req.session.destroy((err: any) => {
       if (err) {
+        console.error("Error destroying session:", err);
         return res.status(500).json({ error: "Failed to logout" });
       }
-      res.clearCookie("connect.sid");
+      
+      console.log("Session destroyed successfully");
+      
+      // Clear the session cookie
+      res.clearCookie("global-services-session");
       res.status(200).json({ message: "Logged out successfully" });
     });
   } else {
+    console.log("No session to destroy");
     res.status(200).json({ message: "Not logged in" });
   }
 });
@@ -146,9 +173,18 @@ export const isAdmin = (
   res: Response,
   next: NextFunction
 ) => {
+  console.log("isAdmin middleware checking session:", {
+    hasSession: !!req.session,
+    userId: req.session?.userId,
+    userRole: req.session?.userRole
+  });
+  
   if (req.session && req.session.userId && req.session.userRole === "admin") {
+    console.log("Admin access granted");
     return next();
   }
+  
+  console.log("Admin access denied");
   res.status(403).json({ error: "Not authorized" });
 };
 

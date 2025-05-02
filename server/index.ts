@@ -1,6 +1,35 @@
 import express, { type Request, Response, NextFunction } from "express";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
+import { storage } from "./storage";
+import { hash } from "bcrypt";
+
+// Function to create admin user if it doesn't exist
+async function ensureAdminExists() {
+  try {
+    const existingAdmin = await storage.getUserByUsername("admin");
+    
+    if (!existingAdmin) {
+      console.log("Creating admin user...");
+      const hashedPassword = await hash("admin123", 10);
+      
+      const adminUser = await storage.createUser({
+        username: "admin",
+        password: hashedPassword,
+        email: "admin@globalservices.com",
+        role: "admin"
+      });
+      
+      console.log("Admin user created successfully!");
+      console.log("Username: admin");
+      console.log("Password: admin123");
+    } else {
+      console.log("Admin user already exists");
+    }
+  } catch (error) {
+    console.error("Error creating admin user:", error);
+  }
+}
 
 const app = express();
 app.use(express.json());
@@ -37,6 +66,9 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  // Create admin user before starting the server
+  await ensureAdminExists();
+  
   const server = await registerRoutes(app);
 
   app.use((err: any, _req: Request, res: Response, _next: NextFunction) => {
