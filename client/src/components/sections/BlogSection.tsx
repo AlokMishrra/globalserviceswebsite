@@ -8,10 +8,10 @@ import { useQuery } from "@tanstack/react-query";
 const BlogSection: React.FC = () => {
   // Fetch blog posts from API
   const { data: blogPosts, isLoading, error } = useQuery({
-    queryKey: ['/api/blog-posts'],
+    queryKey: ['/api/blog'],
     queryFn: async () => {
       try {
-        const response = await fetch('/api/blog-posts');
+        const response = await fetch('/api/blog');
         if (!response.ok) {
           throw new Error('Failed to fetch blog posts');
         }

@@ -29,9 +29,9 @@ const IntegratedSolutionsSection: React.FC = () => {
             </p>
             
             <Link href="/contact">
-              <a className="inline-block bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-all transform hover:scale-105 mt-4">
+              <span className="inline-block bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-all transform hover:scale-105 mt-4">
                 Get Started Today
-              </a>
+              </span>
             </Link>
           </motion.div>
           
