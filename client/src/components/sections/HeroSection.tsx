@@ -73,12 +73,13 @@ const HeroSection: React.FC = () => {
                 className="flex flex-wrap gap-4"
                 variants={itemVariants}
               >
-                <Button 
-                  className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-all transform hover:scale-105"
-                  onClick={() => scrollToSection("services")}
-                >
-                  Our Services
-                </Button>
+                <Link href="/services">
+                  <Button 
+                    className="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-md font-medium transition-all transform hover:scale-105"
+                  >
+                    Our Services
+                  </Button>
+                </Link>
                 <Link 
                   href="/contact"
                   className="inline-flex items-center justify-center bg-dark hover:bg-dark/90 text-white px-6 py-3 rounded-md font-medium transition-all transform hover:scale-105"

@@ -59,6 +59,10 @@ export interface IStorage {
   createJobOpening(job: InsertJobOpening): Promise<JobOpening>;
   updateJobOpening(id: number, job: Partial<InsertJobOpening>): Promise<JobOpening>;
   deleteJobOpening(id: number): Promise<boolean>;
+  
+  // Settings methods
+  getSettings(): Promise<any>;
+  updateSettings(settings: any): Promise<any>;
 }
 
 export class MemStorage implements IStorage {
@@ -68,6 +72,7 @@ export class MemStorage implements IStorage {
   private blogPostsMap: Map<number, BlogPost>;
   private contactSubmissionsMap: Map<number, ContactSubmission>;
   private jobOpeningsMap: Map<number, JobOpening>;
+  private settings: any;
   
   private currentUserId: number;
   private currentContactSubmissionId: number;
@@ -365,6 +370,53 @@ export class MemStorage implements IStorage {
 
   async deleteJobOpening(id: number): Promise<boolean> {
     return this.jobOpeningsMap.delete(id);
+  }
+  
+  // Settings methods
+  async getSettings(): Promise<any> {
+    // Return default settings if none are set
+    if (!this.settings) {
+      this.settings = {
+        general: {
+          siteName: "Global Services",
+          siteTagline: "Digital Marketing Agency",
+          siteDescription: "Full-scale Digital Marketing Agency creating innovative solutions",
+          logoUrl: "",
+          faviconUrl: "",
+          primaryColor: "#10B981",
+          secondaryColor: "#F3F4F6",
+          accentColor: "#FFC107",
+        },
+        contact: {
+          email: "contact@example.com",
+          phone: "+1 (555) 123-4567",
+          address: "123 Main St, New York, NY 10001",
+          mapEmbedUrl: "",
+          contactFormEmail: "contact@example.com",
+        },
+        social: {
+          facebook: "https://facebook.com/globalservices",
+          twitter: "https://twitter.com/globalservices",
+          instagram: "https://instagram.com/globalservices",
+          linkedin: "https://linkedin.com/company/globalservices",
+          youtube: "",
+          pinterest: "",
+        },
+        footer: {
+          copyrightText: "© 2025 Global Services. All rights reserved.",
+          footerText: "Strategy. Creativity. Results.",
+          showSocialIcons: true,
+          showContactInfo: true,
+          showQuickLinks: true,
+        }
+      };
+    }
+    return this.settings;
+  }
+
+  async updateSettings(settings: any): Promise<any> {
+    this.settings = { ...this.settings, ...settings };
+    return this.settings;
   }
 }
 

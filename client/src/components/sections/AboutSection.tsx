@@ -72,10 +72,11 @@ const AboutSection: React.FC = () => {
           viewport={{ once: true }}
           transition={{ duration: 0.5, delay: 0.6 }}
         >
-          <Link href="/contact">
-            <a className="inline-block bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-md font-medium transition-all transform hover:scale-105">
-              Learn More About Us
-            </a>
+          <Link 
+            href="/about"
+            className="inline-block bg-primary hover:bg-primary/90 text-white px-8 py-4 rounded-md font-medium transition-all transform hover:scale-105"
+          >
+            Learn More About Us
           </Link>
         </motion.div>
       </div>
