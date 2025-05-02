@@ -49,24 +49,22 @@ const Header: React.FC = () => {
     >
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center">
-          <Link href="/">
-            <a className="flex items-center space-x-2">
-              <Logo />
-            </a>
+          <Link href="/" className="flex items-center space-x-2">
+            <Logo />
           </Link>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex space-x-8">
             {navLinks.map((link) => (
-              <Link key={link.path} href={link.path}>
-                <a
-                  className={cn(
-                    "font-montserrat font-medium transition-colors hover:text-primary",
-                    location === link.path ? "text-primary" : "text-dark"
-                  )}
-                >
-                  {link.name}
-                </a>
+              <Link 
+                key={link.path} 
+                href={link.path}
+                className={cn(
+                  "font-montserrat font-medium transition-colors hover:text-primary",
+                  location === link.path ? "text-primary" : "text-dark"
+                )}
+              >
+                {link.name}
               </Link>
             ))}
           </nav>
@@ -100,18 +98,18 @@ const Header: React.FC = () => {
             >
               <div className="flex flex-col space-y-4">
                 {navLinks.map((link) => (
-                  <Link key={link.path} href={link.path}>
-                    <a
-                      className={cn(
-                        "font-montserrat font-medium py-2 px-4 rounded-md transition-colors",
-                        location === link.path
-                          ? "bg-primary/10 text-primary"
-                          : "text-dark hover:bg-gray-100"
-                      )}
-                      onClick={() => setIsMobileMenuOpen(false)}
-                    >
-                      {link.name}
-                    </a>
+                  <Link 
+                    key={link.path} 
+                    href={link.path}
+                    className={cn(
+                      "font-montserrat font-medium py-2 px-4 rounded-md transition-colors",
+                      location === link.path
+                        ? "bg-primary/10 text-primary"
+                        : "text-dark hover:bg-gray-100"
+                    )}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    {link.name}
                   </Link>
                 ))}
               </div>
